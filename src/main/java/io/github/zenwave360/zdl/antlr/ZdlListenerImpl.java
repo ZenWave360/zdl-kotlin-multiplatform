@@ -167,7 +167,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var isEntity = false; // TODO
         var isArray = ctx.field_type().ARRAY() != null;
         var validations = processFieldValidations(ctx.field_validations());
-        currentStack.peek().appendTo("fields", name, new FluentMap()
+        var field = new FluentMap()
                 .with("name", name)
                 .with("type", type)
                 .with("javadoc", javadoc)
@@ -176,7 +176,8 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
                 .with("isEntity", isEntity)
                 .with("isArray", isArray)
                 .with("options", new FluentMap())
-                .with("validations", validations));
+                .with("validations", validations);
+        currentStack.peek().appendTo("fields", name, field);
 
         var entityName =  currentStack.peek().get("name");
         var entityLocation = currentCollection + "." + entityName + ".fields." + name;
@@ -184,6 +185,8 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         model.setLocation(entityLocation + ".name", getLocations(ctx.field_name()));
         model.setLocation(entityLocation + ".type", getLocations(ctx.field_type()));
         model.setLocation(entityLocation + ".javadoc", getLocations(first(ctx.javadoc(), ctx.suffix_javadoc())));
+
+        currentStack.push(field);
     }
 
     private Map<String, Object> processFieldValidations(List<io.github.zenwave360.zdl.antlr.ZdlParser.Field_validationsContext> field_validations) {
@@ -203,13 +206,14 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void exitField(io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext ctx) {
+        currentStack.pop();
         super.exitField(ctx);
     }
 
     @Override
     public void enterNested_field(io.github.zenwave360.zdl.antlr.ZdlParser.Nested_fieldContext ctx) {
         io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext parent = (io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext) ctx.getParent();
-        var parentEntity = currentStack.peek();
+        var parentEntity = currentStack.get(currentStack.size() - 2); // currentStack.peek();
         var parentEntityFields = ((FluentMap) parentEntity.get("fields"));
         var parentField = new ArrayList<>(parentEntityFields.values()).get(parentEntityFields.size() - 1);
         String entityName = parent.field_type().ID().getText();
