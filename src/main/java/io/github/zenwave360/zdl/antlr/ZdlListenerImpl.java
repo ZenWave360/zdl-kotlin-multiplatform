@@ -162,6 +162,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterField(io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext ctx) {
         var name = getText(ctx.field_name());
         var type = ctx.field_type() != null && ctx.field_type().ID() != null? ctx.field_type().ID().getText() : null;
+        var initialValue = ctx.field_initialization() != null && ctx.field_initialization().field_initial_value() != null? getValueText(ctx.field_initialization().field_initial_value().simple()) : null;
         var javadoc = javadoc(first(ctx.javadoc(), ctx.suffix_javadoc()));
         var isEnum = false; // see ZdlModelPostProcessor
         var isEntity = false; // see ZdlModelPostProcessor
@@ -170,6 +171,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var field = new FluentMap()
                 .with("name", name)
                 .with("type", type)
+                .with("initialValue", initialValue)
                 .with("javadoc", javadoc)
                 .with("comment", javadoc)
                 .with("isEnum", isEnum)

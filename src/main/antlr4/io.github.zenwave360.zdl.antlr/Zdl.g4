@@ -180,10 +180,12 @@ entity_table_name: keyword;
 entity_body: LBRACE fields RBRACE;
 
 fields: (field COMMA?)*;
-field: javadoc? annotations field_name field_type (LPAREN entity_table_name RPAREN)? (field_validations)* suffix_javadoc? (nested_field)?;
+field: javadoc? annotations field_name field_type (LPAREN entity_table_name RPAREN)? (field_validations)* field_initialization? suffix_javadoc? (nested_field)?;
 nested_field: LBRACE (field)* RBRACE nested_field_validations*;
 field_name: keyword;
 field_type: ID | ID ARRAY;
+field_initialization: EQUALS field_initial_value;
+field_initial_value: simple;
 //field_validations: REQUIRED | UNIQUE | min_validation | max_validation | minlength_validation | maxlength_validation | pattern_validation;
 field_validations: field_validation_name (LPAREN field_validation_value RPAREN)?;
 field_validation_name: REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
