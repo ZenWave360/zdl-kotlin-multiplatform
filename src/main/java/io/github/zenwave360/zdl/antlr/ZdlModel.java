@@ -36,11 +36,7 @@ public class ZdlModel extends FluentMap {
 
 
     public FluentMap getEnums() {
-        var enumsRoot = (FluentMap) get("enums");
-        if(enumsRoot != null) {
-            return (FluentMap) enumsRoot.get("enums");
-        }
-        return null;
+        return (FluentMap) get("enums");
     }
 
     public FluentMap getRelationships() {

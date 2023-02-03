@@ -255,9 +255,9 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
                 .with("className", camelCase(name))
                 .with("javadoc", javadoc)
                 .with("comment", javadoc));
-        ((FluentMap) model.get("enums")).appendTo("enums", name, currentStack.peek());
+        model.appendTo("enums", name, currentStack.peek());
 
-        var entityLocation = "enums.enums." + name;
+        var entityLocation = "enums." + name;
         model.setLocation(entityLocation, getLocations(ctx));
         model.setLocation(entityLocation + ".name", getLocations(ctx.enum_name()));
         model.setLocation(entityLocation + ".body", getLocations(ctx.enum_body()));
@@ -300,7 +300,8 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
             model.setLocation(location + ".from.field", getLocations(ctx.relationship_from().relationship_definition().relationship_field_name()));
             relationship.with("from", from)
                     .with("commentInFrom", commentInFrom)
-                    .with("injectedFieldInFrom", fromField) // FIXME review this
+                    .with("injectedFieldInFrom", fromField)
+                    .with("fromOptions", fromOptions)
                     .with("isInjectedFieldInFromRequired", false); // FIXME review this
         }
 
@@ -313,7 +314,8 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
             model.setLocation(location + ".to.field", getLocations(ctx.relationship_to().relationship_definition().relationship_field_name()));
             relationship.with("to", to)
                     .with("commentInTo", commentInTo)
-                    .with("injectedFieldInTo", toField) // FIXME review this
+                    .with("injectedFieldInTo", toField)
+                    .with("toOptions", toOptions)
                     .with("isInjectedFieldInToRequired", false); // FIXME review this
         }
 
@@ -322,11 +324,15 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     private String removeJavadoc(String text) {
         final String regex = "(/\\*\\*.+?\\*/)";
+        text = text.replace("\r\n", "");
+        text = text.replace("\n", "");
         return text.replaceAll(regex, "");
     }
 
     private Map<String, Object> relationshipOptions(List<io.github.zenwave360.zdl.antlr.ZdlParser.OptionContext> options) {
-        return options.stream().collect(Collectors.toMap(o -> getText(o.option_name()), o -> getOptionValue(o.option_value())));
+        return options.stream().collect(Collectors.toMap(o ->
+                getText(o.option_name()).replace("@", ""),
+                o -> getOptionValue(o.option_value())));
     }
 
     @Override

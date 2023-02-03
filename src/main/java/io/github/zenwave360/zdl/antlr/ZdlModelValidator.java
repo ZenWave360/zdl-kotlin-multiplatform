@@ -116,7 +116,7 @@ public class ZdlModelValidator {
     }
 
     private static boolean isEnum(ZdlModel model, String entityName) {
-        return JSONPath.get(model, "$.enums.enums." + entityName) != null;
+        return JSONPath.get(model, "$.enums." + entityName) != null;
     }
 
     private static boolean isInput(ZdlModel model, String entityName) {

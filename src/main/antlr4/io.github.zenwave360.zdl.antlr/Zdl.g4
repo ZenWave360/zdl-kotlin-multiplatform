@@ -180,7 +180,7 @@ entity_table_name: keyword;
 entity_body: LBRACE fields RBRACE;
 
 fields: (field COMMA?)*;
-field: javadoc? annotations field_name field_type (LPAREN entity_table_name RPAREN)? (field_validations)* field_initialization? suffix_javadoc? (nested_field)?;
+field: javadoc? annotations field_name field_type field_initialization? (LPAREN entity_table_name RPAREN)? (field_validations)* suffix_javadoc? (nested_field)?;
 nested_field: LBRACE (field)* RBRACE nested_field_validations*;
 field_name: keyword;
 field_type: ID | ID ARRAY;
