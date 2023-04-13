@@ -1,0 +1,42 @@
+/**
+* Global javadoc comment
+*/
+
+/**
+* Customer javadoc comment
+*/
+@aggregate
+@service(CustomerService)
+entity Customer {
+  username String required unique
+  tags String[]
+  email String required unique pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/)
+}
+
+service CustomerService for (Customer) {
+  createCustomer(Customer) Customer withEvents onCustomerCreated
+  updateCustomer(Customer) Customer withEvents onCustomerUpdated
+  deleteCustomer(id) withEvents onCustomerDeleted
+  getCustomer(id) Customer
+}
+
+event onCustomerCreated {
+  customerId String
+  customer Customer
+}
+
+event onCustomerUpdated {
+  customerId String
+  customer Customer
+}
+
+THIS is unrecognized
+
+event onCustomerDeleted {
+customerId String
+}
+
+
+output Tratra {
+  file "tratra.json"
+}

@@ -1,0 +1,67 @@
+/**
+* Global javadoc comment
+*/
+
+/**
+* Customer javadoc comment
+*/
+@aggregate
+@service(CustomerService)
+entity Customer {
+  username String required unique
+  tags String[]
+  email String required unique pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/)
+}
+
+/**
+Enum javadoc comment
+*/
+@option(tratra)
+enum OrderStatus {
+  NEW(1) /** new order */,  IN_PROGRESS(2) /** order in progress */,
+  /** order completed */
+  COMPLETED(3)
+  /**
+    * order cancelled
+    */
+  CANCELLED(4)
+}
+
+//relationship OneToMany {
+//	Customer{shipmentDetails} to ShippingDetails{customer}
+//	Customer{paymentDetails} to PaymentDetails{customer}
+//}
+
+relationship ManyToOne {
+  ShippingDetails{customer} to Customer{shipmentDetails}
+  PaymentDetails{customer} to Customer{paymentDetails}
+
+  CustomerOrder{paymentDetails} to PaymentDetails
+  CustomerOrder{customer} to Customer
+}
+
+relationship ManyToMany {
+  CustomerOrder{orderedItems} to OrderedItem{customerOrders}
+}
+
+
+service CustomerService for (Customer) {
+  createCustomer(Customer) Customer withEvents onCustomerCreated
+  updateCustomer(Customer) Customer withEvents onCustomerUpdated
+  deleteCustomer(id) withEvents onCustomerDeleted
+  getCustomer(id) Customer
+}
+
+event onCustomerCreated {
+  customerId String
+  customer Customer
+}
+
+event onCustomerUpdated {
+  customerId String
+  customer Customer
+}
+
+event onCustomerDeleted {
+  customerId String
+}

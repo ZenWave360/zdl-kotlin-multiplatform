@@ -1,0 +1,46 @@
+/**
+* Global javadoc comment
+*/
+
+/**
+* Customer javadoc comment
+*/
+@aggregate
+@service(CustomerService)
+entity Customer(customer_table) {
+
+  username String required unique /** username javadoc comment */
+  tags String[] /** tags javadoc comment */
+  /** email javadoc comment */
+  email String required unique pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/)
+  /**
+  Address javadoc comment
+  Multiline
+  */
+  address Address(address_table) required {
+    street String
+    city String
+    zip String
+  }
+}
+
+service CustomerService for (Customer) {
+  createCustomer(Customer) Customer withEvents onCustomerCreated
+  updateCustomer(Customer) Customer withEvents onCustomerUpdated
+  deleteCustomer(id) withEvents onCustomerDeleted
+  getCustomer(id) Customer
+}
+
+event onCustomerCreated {
+  customerId String
+  customer Customer
+}
+
+event onCustomerUpdated {
+  customerId String
+  customer Customer
+}
+
+event onCustomerDeleted {
+  customerId String
+}
