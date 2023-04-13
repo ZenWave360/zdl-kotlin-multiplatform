@@ -8,11 +8,15 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ZdlListenerImpl extends ZdlBaseListener {
 
     ZdlModel model = new ZdlModel();
     FluentMap current = null;
+    String currentCollection = null;
 
     Inflector inflector = Inflector.getInstance();
 
@@ -64,14 +68,16 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         var name = ctx.entity_name().getText();
         var javadoc = getText(ctx.javadoc());
         var tableName = ctx.entity_table_name() != null? ctx.entity_table_name().ID().getText() : null;
-        processEntity(name, javadoc, tableName);
+        current = processEntity(name, javadoc, tableName);
+        model.appendTo("entities", name, current);
+        currentCollection = "entities";
     }
 
-    private void processEntity(String name, String javadoc, String tableName) {
+    private FluentMap processEntity(String name, String javadoc, String tableName) {
         var className = camelCase(name);
         var instanceName = lowerCamelCase(className);
         var kebabCase = kebabCase(name);
-        current = new FluentMap()
+        return new FluentMap()
                 .with("name", name)
                 .with("className", className)
                 .with("instanceName", instanceName)
@@ -83,7 +89,6 @@ public class ZdlListenerImpl extends ZdlBaseListener {
                 .with("javadoc", javadoc)
                 .with("fields", new FluentMap())
         ;
-        model.appendTo("entities", name, current);
     }
 
     @Override
@@ -124,8 +129,9 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         String entityName = parent.field_type().ID().getText();
         String entityJavadoc = getText(parent.javadoc());
         String tableName = parent.entity_table_name() != null? parent.entity_table_name().ID().getText() : null;
-        processEntity(entityName, entityJavadoc, tableName);
+        current = processEntity(entityName, entityJavadoc, tableName);
         current.appendTo("options", "embedded", true);
+        model.appendTo(currentCollection, entityName, current);
     }
 
     @Override
@@ -151,6 +157,100 @@ public class ZdlListenerImpl extends ZdlBaseListener {
                 .with("comment", javadoc)
                 .with("value", value)
         );
+    }
+
+    @Override
+    public void enterRelationship(ZdlParser.RelationshipContext ctx) {
+        var parent = (ZdlParser.RelationshipsContext) ctx.parent;
+        var relationshipType = parent.relationship_type().getText();
+
+        var from = ctx.relationship_from().ID(0).getText();
+        var fromField = ctx.relationship_from().ID(1) != null? ctx.relationship_from().ID(1).getText() : null;
+        var commentInFrom = getText(ctx.relationship_from_javadoc());
+        var fromOptions = relationshipOptions(ctx.relationship_from_options().option());;
+
+        var to = ctx.relationship_to().ID(0).getText();
+        var toField = ctx.relationship_to().ID(1) != null? ctx.relationship_to().ID(1).getText() : null;
+        var commentInTo = getText(ctx.relationship_to_javadoc());
+        var toOptions = relationshipOptions(ctx.relationship_to_options().option());
+
+        var relationship = new FluentMap()
+                .with("type", relationshipType)
+                .with("from", from)
+                .with("to", to)
+                .with("commentInFrom", commentInFrom)
+                .with("commentInTo", commentInTo)
+                .appendTo("options", "source", fromOptions)
+                .appendTo("options", "destination", toOptions)
+                .with("injectedFieldInFrom", fromField) // FIXME review this
+                .with("injectedFieldInTo", toField) // FIXME review this
+                .with("isInjectedFieldInFromRequired", false) // FIXME review this
+                .with("isInjectedFieldInToRequired", false) // FIXME review this
+                ;
+        var relationshipName = relationshipType + "_" + ctx.relationship_from().getText() + "_" + ctx.relationship_to().getText();
+        model.getRelationships().appendTo(relationshipType, relationshipName, relationship);
+    }
+
+    private Map<String, Object> relationshipOptions(List<ZdlParser.OptionContext> options) {
+        return options.stream().collect(Collectors.toMap(o -> getText(o.option_name()), o -> getText(o.option_value(), true)));
+    }
+
+    @Override
+    public void enterService(ZdlParser.ServiceContext ctx) {
+        var serviceName = ctx.ID().getText();
+        var serviceJavadoc = getText(ctx.javadoc());
+        var serviceAggregates = ctx.service_aggregates() != null? ctx.service_aggregates().getText().split(",") : null;
+        current = new FluentMap()
+                .with("name", serviceName)
+                .with("className", camelCase(serviceName))
+                .with("javadoc", serviceJavadoc)
+                .with("comment", serviceJavadoc)
+                .with("aggregates", serviceAggregates)
+                .with("methods", new FluentMap())
+                ;
+        model.appendTo("services", serviceName, current);
+    }
+
+    @Override
+    public void enterService_method(ZdlParser.Service_methodContext ctx) {
+        var methodName = getText(ctx.service_method_name());
+        var methodParamId = ctx.service_method_parameter_id() != null? "id" : null;
+        var methodParameter = ctx.service_method_parameter() != null? ctx.service_method_parameter().getText() : null;
+        var returnType = getText(ctx.service_method_return());
+        var withEvents = getText(ctx.service_method_events()); // TODO split
+
+        var method = new FluentMap()
+                .with("name", methodName)
+                .with("paramId", methodParamId)
+                .with("parameter", methodParameter)
+                .with("returnType", returnType)
+                .with("withEvents", withEvents)
+                ;
+        current.appendTo("methods", methodName, method);
+    }
+
+    @Override
+    public void enterEvent(ZdlParser.EventContext ctx) {
+        var name = ctx.event_name().getText();
+        var javadoc = getText(ctx.javadoc());
+        var kebabCase = kebabCase(name);
+        current = new FluentMap()
+                .with("name", name)
+                .with("kebabCase", kebabCase)
+                .with("javadoc", javadoc)
+                .with("fields", new FluentMap())
+                ;
+        model.appendTo("events", name, current);
+        currentCollection = "events";
+    }
+
+    @Override
+    public void enterInput(ZdlParser.InputContext ctx) {
+        var name = ctx.input_name().getText();
+        var javadoc = getText(ctx.javadoc());
+        current = processEntity(name, javadoc, null);
+        model.appendTo("inputs", name, current);
+        currentCollection = "inputs";
     }
 
     @Override

@@ -56,7 +56,7 @@ WS: [ \t\r\n]+ -> skip;
 PATTERN_REGEX: '/' .*? '/' ; // TODO: improve regex
 
 // Rules
-zdl: global_javadoc? (option)* (entity | enum | input | event | relationships | service)* EOF;
+zdl: global_javadoc? (entity | enum | input | event | relationships | service)* EOF;
 global_javadoc: JAVADOC;
 javadoc: JAVADOC;
 suffix_javadoc: JAVADOC;
@@ -100,23 +100,23 @@ event: javadoc? (option)* EVENT event_name '{' fields '}';
 event_name: ID;
 
 // relationships
-relationships: RELATIONSHIP (MANY_TO_MANY | MANY_TO_ONE| ONE_TO_MANY | ONE_TO_ONE)  '{' relationship* '}';
+relationships: RELATIONSHIP relationship_type  '{' relationship* '}';
+relationship_type: MANY_TO_MANY | MANY_TO_ONE| ONE_TO_MANY | ONE_TO_ONE;
 relationship:
-    relationship_from_javadoc? relationship_from_options relationship_from_type ('{' relationship_from_field '}')?
+    relationship_from_javadoc? relationship_from_options relationship_from
     'to'
-    relationship_to_javadoc? relationship_to_options relationship_to_type ('{' relationship_to_field '}')?;
+    relationship_to_javadoc? relationship_to_options relationship_to;
 relationship_from_javadoc: JAVADOC?;
 relationship_from_options: (option)*;
+relationship_from: ID ('{' ID '}')?;
+relationship_to: ID ('{' ID '}')?;
 relationship_to_javadoc: JAVADOC?;
 relationship_to_options: (option)*;
-relationship_from_type: ID;
-relationship_from_field: ID;
-relationship_to_type: ID;
-relationship_to_field: ID;
+
 
 // services
-service: javadoc? (option)*  SERVICE ID sevice_aggregates '{' service_method* '}';
-sevice_aggregates: FOR '(' ID (',' ID)* ')';
+service: javadoc? (option)*  SERVICE ID service_aggregates '{' service_method* '}';
+service_aggregates: FOR '(' ID (',' ID)* ')';
 service_method: javadoc? (option)* service_method_name '(' service_method_parameter_id? ','? service_method_parameter? ')' service_method_return? service_method_events?;
 service_method_name: ID;
 service_method_parameter_id: 'id';
