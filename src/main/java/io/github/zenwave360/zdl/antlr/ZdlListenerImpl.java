@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,6 +20,10 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     String currentCollection = null;
 
     Inflector inflector = Inflector.getInstance();
+
+    public ZdlModel getModel() {
+        return model;
+    }
 
     @Override
     public void enterZdl(ZdlParser.ZdlContext ctx) {
@@ -64,6 +69,11 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
+    public void enterLegacy_constants(ZdlParser.Legacy_constantsContext ctx) {
+        ctx.LEGACY_CONSTANT().stream().map(TerminalNode::getText).forEach(c -> model.appendTo("constants", c, c));
+    }
+
+    @Override
     public void enterEntity(ZdlParser.EntityContext ctx) {
         var name = ctx.entity_name().getText();
         var javadoc = getText(ctx.javadoc());
@@ -87,13 +97,14 @@ public class ZdlListenerImpl extends ZdlBaseListener {
                 .with("kebabCasePlural", pluralize(kebabCase))
                 .with("tableName", tableName)
                 .with("javadoc", javadoc)
+                .with("options", new FluentMap())
                 .with("fields", new FluentMap())
         ;
     }
 
     @Override
     public void enterOption(ZdlParser.OptionContext ctx) {
-        var name = ctx.SERVICE_OPTION() != null? "service" : getText(ctx.option_name());
+        var name = ctx.reserved_option() != null? ctx.reserved_option().getText().replace("@", "") : getText(ctx.option_name());
         var value = getText(ctx.option_value(), true);
         current.appendTo("options", name, value);
         super.enterOption(ctx);
@@ -107,6 +118,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         var isEnum = false; // TODO
         var isEntity = false; // TODO
         var isArray = ctx.field_type().ARRAY() != null;
+        var validations = processFieldValidations(ctx.field_validations());
         current.appendTo("fields", name, new FluentMap()
                 .with("name", name)
                 .with("type", type)
@@ -115,7 +127,20 @@ public class ZdlListenerImpl extends ZdlBaseListener {
                 .with("isEnum", isEnum)
                 .with("isEntity", isEntity)
                 .with("isArray", isArray)
-                .with("validations", new ArrayList<>()));
+                .with("options", new FluentMap())
+                .with("validations", validations));
+    }
+
+    private Map<String, Object> processFieldValidations(List<ZdlParser.Field_validationsContext> field_validations) {
+        var validations = new FluentMap();
+        if(field_validations != null) {
+            field_validations.forEach(v -> {
+                var name = getText(v.field_validation_name());
+                var value = first(getText(v.field_validation_value()), "");
+                validations.with(name, Map.of("name", name, "value", value));
+            });
+        }
+        return validations;
     }
 
     @Override
@@ -164,15 +189,15 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         var parent = (ZdlParser.RelationshipsContext) ctx.parent;
         var relationshipType = parent.relationship_type().getText();
 
-        var from = ctx.relationship_from().ID(0).getText();
-        var fromField = ctx.relationship_from().ID(1) != null? ctx.relationship_from().ID(1).getText() : null;
-        var commentInFrom = getText(ctx.relationship_from_javadoc());
-        var fromOptions = relationshipOptions(ctx.relationship_from_options().option());;
+        var from = getText(ctx.relationship_from().relationship_definition().relationship_entity_name());
+        var fromField = getText(ctx.relationship_from().relationship_definition().relationship_field_name());
+        var commentInFrom = getText(ctx.relationship_from().relationship_javadoc());
+        var fromOptions = relationshipOptions(ctx.relationship_from().relationship_options().option());
 
-        var to = ctx.relationship_to().ID(0).getText();
-        var toField = ctx.relationship_to().ID(1) != null? ctx.relationship_to().ID(1).getText() : null;
-        var commentInTo = getText(ctx.relationship_to_javadoc());
-        var toOptions = relationshipOptions(ctx.relationship_to_options().option());
+        var to = getText(ctx.relationship_to().relationship_definition().relationship_entity_name());
+        var toField = getText(ctx.relationship_to().relationship_definition().relationship_field_name());
+        var commentInTo = getText(ctx.relationship_to().relationship_javadoc());
+        var toOptions = relationshipOptions(ctx.relationship_to().relationship_options().option());
 
         var relationship = new FluentMap()
                 .with("type", relationshipType)
@@ -196,10 +221,34 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
+    public void enterService_legacy(ZdlParser.Service_legacyContext ctx) {
+        var serviceName = ctx.ID().getText();
+        String serviceJavadoc = null; // getText(ctx.javadoc());
+        var serviceAggregates = ctx.service_aggregates() != null? Arrays.asList(ctx.service_aggregates().getText().split(",")) : null;
+        current = new FluentMap()
+                .with("name", serviceName)
+                .with("className", camelCase(serviceName))
+                .with("javadoc", serviceJavadoc)
+                .with("comment", serviceJavadoc)
+                .with("aggregates", serviceAggregates)
+                .with("methods", createCRUDMethods(serviceAggregates))
+                ;
+        model.appendTo("services", serviceName, current);
+    }
+
+    public Map createCRUDMethods(List<String> entities) {
+        var methods = new FluentMap();
+        for (String entity : entities) {
+            createCRUDMethods(entity.trim()).forEach(k -> methods.put((String) k.get("name"), k));
+        }
+        return methods;
+    }
+
+    @Override
     public void enterService(ZdlParser.ServiceContext ctx) {
         var serviceName = ctx.ID().getText();
         var serviceJavadoc = getText(ctx.javadoc());
-        var serviceAggregates = ctx.service_aggregates() != null? ctx.service_aggregates().getText().split(",") : null;
+        var serviceAggregates = ctx.service_aggregates() != null? Arrays.asList(ctx.service_aggregates().getText().split(",")) : null;
         current = new FluentMap()
                 .with("name", serviceName)
                 .with("className", camelCase(serviceName))
@@ -216,6 +265,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         var methodName = getText(ctx.service_method_name());
         var methodParamId = ctx.service_method_parameter_id() != null? "id" : null;
         var methodParameter = ctx.service_method_parameter() != null? ctx.service_method_parameter().getText() : null;
+        var pageable = ctx.pageable() != null;
         var returnType = getText(ctx.service_method_return());
         var withEvents = getText(ctx.service_method_events()); // TODO split
 
@@ -223,6 +273,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
                 .with("name", methodName)
                 .with("paramId", methodParamId)
                 .with("parameter", methodParameter)
+                .with("pageable", pageable)
                 .with("returnType", returnType)
                 .with("withEvents", withEvents)
                 ;
@@ -251,6 +302,36 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         current = processEntity(name, javadoc, null);
         model.appendTo("inputs", name, current);
         currentCollection = "inputs";
+    }
+
+    public List<Map> createCRUDMethods(String entity) {
+        var crudMethods = new ArrayList<Map>();
+        crudMethods.add(new FluentMap()
+                .with("name", "get" + entity)
+                .with("paramId", "id")
+                .with("returnType", entity)
+        );
+        crudMethods.add(new FluentMap()
+                .with("name", "list" + pluralize(entity))
+                .with("pageable", true)
+                .with("returnType", entity + "[]")
+        );
+        crudMethods.add(new FluentMap()
+                .with("name", "create" + entity)
+                .with("parameter", entity)
+                .with("returnType", entity)
+        );
+        crudMethods.add(new FluentMap()
+                .with("name", "update" + entity)
+                .with("paramId", "id")
+                .with("parameter", entity)
+                .with("returnType", entity)
+        );
+        crudMethods.add(new FluentMap()
+                .with("name", "delete" + entity)
+                .with("paramId", "id")
+        );
+        return crudMethods;
     }
 
     @Override

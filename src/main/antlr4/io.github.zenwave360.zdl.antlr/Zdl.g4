@@ -12,11 +12,19 @@ ONE_TO_MANY: 'OneToMany';
 ONE_TO_ONE: 'OneToOne';
 //fragment SERVICE_TOKEN: 'service';
 //SERVICE: ~'@' SERVICE_TOKEN; // not starting with @
-SERVICE_OPTION: '@service';
 SERVICE: 'service';
 WITH: 'with';
 FOR: 'for';
 WITH_EVENTS: 'withEvents';
+PAGEABLE: 'pageable';
+
+// options with reserved tokens
+SERVICE_OPTION: '@service';
+INPUT_OPTION: '@input';
+EVENT_OPTION: '@event';
+RELATIONSHIP_OPTION: '@relationship';
+ENUM_OPTION: '@enum';
+PAGEABLE_OPTION: '@pageable';
 
 REQUIRED: 'required';
 UNIQUE: 'unique';
@@ -39,6 +47,8 @@ DOUBLE_QUOTED_STRING :  '"' (ESC | ~["\\])* '"' ;
 SINGLE_QUOTED_STRING :  '\'' (ESC | ~['\\])* '\'' ;
 fragment ESC :   '\\' ["\\/bfnrt] ;
 
+LEGACY_CONSTANT: [A-Z0-9_]+ '=' DIGIT+;
+
 VALUE : SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | NUMBER | 'true' | 'false' | 'null';
 OBJECT: '{' (ID ':' VALUE)? (',' ID ':' VALUE)* '}';
 
@@ -56,13 +66,16 @@ WS: [ \t\r\n]+ -> skip;
 PATTERN_REGEX: '/' .*? '/' ; // TODO: improve regex
 
 // Rules
-zdl: global_javadoc? (entity | enum | input | event | relationships | service)* EOF;
+zdl: global_javadoc? legacy_constants? (entity | enum | input | event | relationships | service | service_legacy)* EOF;
 global_javadoc: JAVADOC;
 javadoc: JAVADOC;
 suffix_javadoc: JAVADOC;
 
+legacy_constants: LEGACY_CONSTANT*;
+
 // @options
-option: SERVICE_OPTION ('(' option_value ')')? | '@' option_name ('(' option_value ')')?;
+option: reserved_option ('(' option_value ')')? | '@' option_name ('(' option_value ')')?;
+reserved_option: SERVICE_OPTION | INPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGEABLE_OPTION;
 option_name: ID;
 option_value: ID | VALUE | OBJECT;
 
@@ -76,13 +89,11 @@ field: javadoc? (option)* field_name field_type entity_table_name? (field_valida
 nested_field: '{' (field)* '}';
 field_name: ID;
 field_type: ID | ID ARRAY;
-field_validations: REQUIRED | UNIQUE | min_validation | max_validation | minlength_validation | maxlength_validation | pattern_validation;
-validation_value_int: INT;
-min_validation: MIN '(' validation_value_int ')';
-max_validation: MAX '(' validation_value_int ')';
-minlength_validation: MINLENGTH '(' validation_value_int ')';
-maxlength_validation: MAXLENGTH '(' validation_value_int ')';
-pattern_validation: PATTERN '(' PATTERN_REGEX ')';
+//field_validations: REQUIRED | UNIQUE | min_validation | max_validation | minlength_validation | maxlength_validation | pattern_validation;
+field_validations: field_validation_name ('(' field_validation_value ')')?;
+field_validation_name: REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
+field_validation_value: INT | PATTERN_REGEX;
+
 
 // enums
 enum: javadoc? (option)* ENUM enum_name '{' (enum_value FIELD_SEPARATOR?)* '}';
@@ -102,28 +113,29 @@ event_name: ID;
 // relationships
 relationships: RELATIONSHIP relationship_type  '{' relationship* '}';
 relationship_type: MANY_TO_MANY | MANY_TO_ONE| ONE_TO_MANY | ONE_TO_ONE;
-relationship:
-    relationship_from_javadoc? relationship_from_options relationship_from
-    'to'
-    relationship_to_javadoc? relationship_to_options relationship_to;
-relationship_from_javadoc: JAVADOC?;
-relationship_from_options: (option)*;
-relationship_from: ID ('{' ID '}')?;
-relationship_to: ID ('{' ID '}')?;
-relationship_to_javadoc: JAVADOC?;
-relationship_to_options: (option)*;
+relationship: relationship_from 'to'relationship_to;
+relationship_from: relationship_javadoc? relationship_options relationship_definition;
+relationship_to: relationship_javadoc? relationship_options relationship_definition;
+relationship_javadoc: JAVADOC?;
+relationship_options: (option)*;
+relationship_definition: relationship_entity_name ('{' relationship_field_name relationship_description_field? '}')?;
+relationship_entity_name: ID;
+relationship_field_name: ID;
+relationship_description_field: '(' ID ')';
 
 
 // services
-service: javadoc? (option)*  SERVICE ID service_aggregates '{' service_method* '}';
-service_aggregates: FOR '(' ID (',' ID)* ')';
-service_method: javadoc? (option)* service_method_name '(' service_method_parameter_id? ','? service_method_parameter? ')' service_method_return? service_method_events?;
+service: javadoc? (option)*  SERVICE ID FOR '(' service_aggregates ')' '{' service_method* '}';
+service_aggregates: ID (',' ID)*;
+service_method: javadoc? (option)* service_method_name '(' service_method_parameter_id? ','? service_method_parameter? ','? pageable? ')' service_method_return? service_method_events?;
 service_method_name: ID;
 service_method_parameter_id: 'id';
 service_method_parameter: ID;
-service_method_return: ID;
+service_method_return: ID | ID ARRAY;
 service_method_events: WITH_EVENTS (service_method_event)*;
 service_method_event: ID;
+pageable: PAGEABLE;
 
+service_legacy: SERVICE service_aggregates 'with' ID;
 
 

@@ -2,15 +2,17 @@
 * Global javadoc comment
 */
 
+MAX_LENGTH=100
+
 /**
 * Customer javadoc comment
 */
 @aggregate
 @service(CustomerService)
 entity Customer {
-  username String required unique
+  username String required unique min(5)
   tags String[]
-  email String required unique pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/)
+  email String required unique
 }
 
 /**
@@ -24,6 +26,13 @@ enum OrderStatus {
     * order cancelled
     */
   CANCELLED(4)
+}
+
+@input
+entity CustomerEntityInput {
+  username String required unique
+  tags String[]
+  email String required unique
 }
 
 //relationship OneToMany {
@@ -63,6 +72,8 @@ input CustomerInput {
   }
 }
 
+service Customer, CustomerOrder with CustomerLegacyServer
+
 /**
  Service javadoc comment
  */
@@ -77,6 +88,8 @@ service CustomerService for (Customer) {
   updateCustomer(Customer) Customer withEvents onCustomerUpdated /** update customer javadoc comment */
   deleteCustomer(id) withEvents onCustomerDeleted
   getCustomer(id) Customer
+
+  listCustomers(pageable) Customer[]
 }
 
 @topic(tratra)
@@ -88,7 +101,11 @@ event onCustomerCreated {
 @topic(tratra)
 event onCustomerUpdated {
   customerId String
-  customer Customer
+  customer Customer {
+    username String
+    tags String[]
+    email String
+  }
 }
 
 @topic(tratra)

@@ -9,7 +9,7 @@ public class ZdlModel extends FluentMap {
         put("options", new FluentMap());
         put("entities", new FluentMap());
         put("enums", new FluentMap());
-        put("relationships", new FluentMap().with("relationships", new FluentMap()));
+        put("relationships", new FluentMap());
         put("inputs", new FluentMap());
         put("services", new FluentMap());
         put("events", new FluentMap());
@@ -24,6 +24,6 @@ public class ZdlModel extends FluentMap {
     }
 
     public FluentMap getRelationships() {
-        return (FluentMap) ((FluentMap) get("relationships")).get("relationships");
+        return (FluentMap) get("relationships");
     }
 }
