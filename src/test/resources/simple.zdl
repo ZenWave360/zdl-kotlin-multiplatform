@@ -12,7 +12,7 @@ MAX_LENGTH=100
 entity Customer {
   username String required unique min(5)
   tags String[]
-  email String required unique
+  email String required unique max(MAX_LENGTH)
 }
 
 /**
@@ -83,23 +83,24 @@ service CustomerService for (Customer) {
    * Create customer javadoc comment
    */
   @command(createCustomer)
-  createCustomer(Customer) Customer withEvents onCustomerCreated
-  @evento(onCustomerCreated)
-  updateCustomer(Customer) Customer withEvents onCustomerUpdated /** update customer javadoc comment */
-  deleteCustomer(id) withEvents onCustomerDeleted
+  createCustomer(Customer) Customer withEvents CustomerCreated
+  @event(onCustomerCreated)
+  updateCustomer(Customer) Customer withEvents CustomerUpdated /** update customer javadoc comment */
+  deleteCustomer(id) withEvents CustomerDeleted
   getCustomer(id) Customer
 
-  listCustomers(pageable) Customer[]
+  @pageable
+  listCustomers() Customer[]
 }
 
 @topic(tratra)
-event onCustomerCreated {
+event CustomerCreated (customerEvents) {
   customerId String
   customer Customer
 }
 
 @topic(tratra)
-event onCustomerUpdated {
+event CustomerUpdated(customerEvents) {
   customerId String
   customer Customer {
     username String
@@ -109,6 +110,12 @@ event onCustomerUpdated {
 }
 
 @topic(tratra)
-event onCustomerDeleted {
+event CustomerDeleted {
   customerId String
+}
+
+
+@entity(Customer)
+event CustomerEvent(customerEvent) {
+
 }

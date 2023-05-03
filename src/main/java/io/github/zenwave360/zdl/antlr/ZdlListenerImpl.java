@@ -4,6 +4,7 @@ import io.github.zenwave360.zdl.FluentMap;
 import io.github.zenwave360.zdl.ZdlModel;
 import io.github.zenwave360.zdl.lang.Inflector;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -11,12 +12,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 public class ZdlListenerImpl extends ZdlBaseListener {
 
     ZdlModel model = new ZdlModel();
-    FluentMap current = null;
+//    FluentMap current = null;
+    Stack<FluentMap> currentStack = new Stack<>();
     String currentCollection = null;
 
     Inflector inflector = Inflector.getInstance();
@@ -62,15 +65,26 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         return null;
     }
 
+    private String javadoc(Object javadoc) {
+        if (javadoc == null) {
+            return null;
+        }
+        return javadoc.toString()
+                .replaceAll("^/\\*\\*", "")
+                .replaceAll("\\*/$", "")
+                .replaceAll("^\\s+\\* ", "")
+                .trim();
+    }
+
     @Override
     public void enterGlobal_javadoc(ZdlParser.Global_javadocContext ctx) {
         var javadoc = getText(ctx);
-        model.put("javadoc", javadoc);
+        model.put("javadoc", javadoc(javadoc));
     }
 
     @Override
     public void enterLegacy_constants(ZdlParser.Legacy_constantsContext ctx) {
-        ctx.LEGACY_CONSTANT().stream().map(TerminalNode::getText).forEach(c -> model.appendTo("constants", c, c));
+        ctx.LEGACY_CONSTANT().stream().map(TerminalNode::getText).map(c -> c.split("=")).forEach(c -> model.appendTo("constants", c[0], c[1]));
     }
 
     @Override
@@ -78,9 +92,14 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         var name = ctx.entity_name().getText();
         var javadoc = getText(ctx.javadoc());
         var tableName = ctx.entity_table_name() != null? ctx.entity_table_name().ID().getText() : null;
-        current = processEntity(name, javadoc, tableName);
-        model.appendTo("entities", name, current);
+        currentStack.push(processEntity(name, javadoc, tableName));
+        model.appendTo("entities", name, currentStack.peek());
         currentCollection = "entities";
+    }
+
+    @Override
+    public void exitEntity(ZdlParser.EntityContext ctx) {
+        currentStack.pop();
     }
 
     private FluentMap processEntity(String name, String javadoc, String tableName) {
@@ -96,7 +115,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
                 .with("kebabCase", kebabCase)
                 .with("kebabCasePlural", pluralize(kebabCase))
                 .with("tableName", tableName)
-                .with("javadoc", javadoc)
+                .with("javadoc", javadoc(javadoc))
                 .with("options", new FluentMap())
                 .with("fields", new FluentMap())
         ;
@@ -106,7 +125,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     public void enterOption(ZdlParser.OptionContext ctx) {
         var name = ctx.reserved_option() != null? ctx.reserved_option().getText().replace("@", "") : getText(ctx.option_name());
         var value = getText(ctx.option_value(), true);
-        current.appendTo("options", name, value);
+        currentStack.peek().appendTo("options", name, value);
         super.enterOption(ctx);
     }
 
@@ -119,11 +138,11 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         var isEntity = false; // TODO
         var isArray = ctx.field_type().ARRAY() != null;
         var validations = processFieldValidations(ctx.field_validations());
-        current.appendTo("fields", name, new FluentMap()
+        currentStack.peek().appendTo("fields", name, new FluentMap()
                 .with("name", name)
                 .with("type", type)
-                .with("javadoc", javadoc)
-                .with("comment", javadoc)
+                .with("javadoc", javadoc(javadoc))
+                .with("comment", javadoc(javadoc))
                 .with("isEnum", isEnum)
                 .with("isEntity", isEntity)
                 .with("isArray", isArray)
@@ -154,21 +173,31 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         String entityName = parent.field_type().ID().getText();
         String entityJavadoc = getText(parent.javadoc());
         String tableName = parent.entity_table_name() != null? parent.entity_table_name().ID().getText() : null;
-        current = processEntity(entityName, entityJavadoc, tableName);
-        current.appendTo("options", "embedded", true);
-        model.appendTo(currentCollection, entityName, current);
+        currentStack.push(processEntity(entityName, entityJavadoc, tableName));
+        currentStack.peek().appendTo("options", "embedded", true);
+        model.appendTo(currentCollection, entityName, currentStack.peek());
+    }
+
+    @Override
+    public void exitNested_field(ZdlParser.Nested_fieldContext ctx) {
+        currentStack.pop();
     }
 
     @Override
     public void enterEnum(ZdlParser.EnumContext ctx) {
         var name = getText(ctx.enum_name());
         var javadoc = getText(ctx.javadoc());
-        current = new FluentMap()
+        currentStack.push(new FluentMap()
                 .with("name", name)
                 .with("className", camelCase(name))
-                .with("javadoc", javadoc)
-                .with("comment", javadoc);
-        ((FluentMap) model.get("enums")).appendTo("enums", name, current);
+                .with("javadoc", javadoc(javadoc))
+                .with("comment", javadoc(javadoc)));
+        ((FluentMap) model.get("enums")).appendTo("enums", name, currentStack.peek());
+    }
+
+    @Override
+    public void exitEnum(ZdlParser.EnumContext ctx) {
+        currentStack.pop();
     }
 
     @Override
@@ -176,10 +205,10 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         var name = getText(ctx.enum_value_name());
         var javadoc = first(getText(ctx.javadoc(), getText(ctx.suffix_javadoc())));
         var value = getText(ctx.enum_value_value()); // TODO refactor when supporting quoted strings
-        current.appendTo("values", name, new FluentMap()
+        currentStack.peek().appendTo("values", name, new FluentMap()
                 .with("name", name)
-                .with("javadoc", javadoc)
-                .with("comment", javadoc)
+                .with("javadoc", javadoc(javadoc))
+                .with("comment", javadoc(javadoc))
                 .with("value", value)
         );
     }
@@ -203,8 +232,8 @@ public class ZdlListenerImpl extends ZdlBaseListener {
                 .with("type", relationshipType)
                 .with("from", from)
                 .with("to", to)
-                .with("commentInFrom", commentInFrom)
-                .with("commentInTo", commentInTo)
+                .with("commentInFrom", javadoc(commentInFrom))
+                .with("commentInTo", javadoc(commentInTo))
                 .appendTo("options", "source", fromOptions)
                 .appendTo("options", "destination", toOptions)
                 .with("injectedFieldInFrom", fromField) // FIXME review this
@@ -225,15 +254,20 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         var serviceName = ctx.ID().getText();
         String serviceJavadoc = null; // getText(ctx.javadoc());
         var serviceAggregates = ctx.service_aggregates() != null? Arrays.asList(ctx.service_aggregates().getText().split(",")) : null;
-        current = new FluentMap()
+        currentStack.push(new FluentMap()
                 .with("name", serviceName)
                 .with("className", camelCase(serviceName))
-                .with("javadoc", serviceJavadoc)
-                .with("comment", serviceJavadoc)
+                .with("javadoc", javadoc(serviceJavadoc))
+                .with("comment", javadoc(serviceJavadoc))
                 .with("aggregates", serviceAggregates)
                 .with("methods", createCRUDMethods(serviceAggregates))
-                ;
-        model.appendTo("services", serviceName, current);
+        );
+        model.appendTo("services", serviceName, currentStack.peek());
+    }
+
+    @Override
+    public void exitService_legacy(ZdlParser.Service_legacyContext ctx) {
+        currentStack.pop();
     }
 
     public Map createCRUDMethods(List<String> entities) {
@@ -249,15 +283,20 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         var serviceName = ctx.ID().getText();
         var serviceJavadoc = getText(ctx.javadoc());
         var serviceAggregates = ctx.service_aggregates() != null? Arrays.asList(ctx.service_aggregates().getText().split(",")) : null;
-        current = new FluentMap()
+        currentStack.push(new FluentMap()
                 .with("name", serviceName)
                 .with("className", camelCase(serviceName))
-                .with("javadoc", serviceJavadoc)
-                .with("comment", serviceJavadoc)
+                .with("javadoc", javadoc(serviceJavadoc))
+                .with("comment", javadoc(serviceJavadoc))
                 .with("aggregates", serviceAggregates)
                 .with("methods", new FluentMap())
-                ;
-        model.appendTo("services", serviceName, current);
+        );
+        model.appendTo("services", serviceName, currentStack.peek());
+    }
+
+    @Override
+    public void exitService(ZdlParser.ServiceContext ctx) {
+        currentStack.pop();
     }
 
     @Override
@@ -265,43 +304,77 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         var methodName = getText(ctx.service_method_name());
         var methodParamId = ctx.service_method_parameter_id() != null? "id" : null;
         var methodParameter = ctx.service_method_parameter() != null? ctx.service_method_parameter().getText() : null;
-        var pageable = ctx.pageable() != null;
         var returnType = getText(ctx.service_method_return());
-        var withEvents = getText(ctx.service_method_events()); // TODO split
+        var withEvents = getServiceMethodEvents(ctx.service_method_events());
 
         var method = new FluentMap()
                 .with("name", methodName)
                 .with("paramId", methodParamId)
                 .with("parameter", methodParameter)
-                .with("pageable", pageable)
                 .with("returnType", returnType)
                 .with("withEvents", withEvents)
                 ;
-        current.appendTo("methods", methodName, method);
+        currentStack.peek().appendTo("methods", methodName, method);
+        currentStack.push(method);
+    }
+
+    @Override
+    public void exitService_method(ZdlParser.Service_methodContext ctx) {
+        currentStack.pop();
+    }
+
+    private List<String> getServiceMethodEvents(ZdlParser.Service_method_eventsContext ctx) {
+        var events = new ArrayList<String>();
+        if (ctx != null) {
+            events.addAll(ctx.service_method_event().stream().map(RuleContext::getText).collect(Collectors.toList()));
+        }
+        return events;
     }
 
     @Override
     public void enterEvent(ZdlParser.EventContext ctx) {
         var name = ctx.event_name().getText();
+        var channel = getText(ctx.event_channel());
         var javadoc = getText(ctx.javadoc());
         var kebabCase = kebabCase(name);
-        current = new FluentMap()
+        currentStack.push(new FluentMap()
                 .with("name", name)
+                .with("channel", channel)
                 .with("kebabCase", kebabCase)
-                .with("javadoc", javadoc)
+                .with("javadoc", javadoc(javadoc))
                 .with("fields", new FluentMap())
-                ;
-        model.appendTo("events", name, current);
+        );
+        model.appendTo("events", name, currentStack.peek());
         currentCollection = "events";
     }
+
+    @Override
+    public void exitEvent(ZdlParser.EventContext ctx) {
+        currentStack.pop();
+    }
+
+    //    @Override
+//    public void exitEvent(ZdlParser.EventContext ctx) {
+//        ctx.option().stream().filter(o -> o.option_name().getText().equals("entity")).findFirst().ifPresent(o -> {
+//            var entityName = o.option_value().getText();
+//            var entity = model.getEntities().get(entityName);
+//            var fields = ((Map)entity).get("fields");
+//            current.appendTo("fields", (Map) fields);
+//        });
+//    }
 
     @Override
     public void enterInput(ZdlParser.InputContext ctx) {
         var name = ctx.input_name().getText();
         var javadoc = getText(ctx.javadoc());
-        current = processEntity(name, javadoc, null);
-        model.appendTo("inputs", name, current);
+        currentStack.push(processEntity(name, javadoc, null));
+        model.appendTo("inputs", name, currentStack.peek());
         currentCollection = "inputs";
+    }
+
+    @Override
+    public void exitInput(ZdlParser.InputContext ctx) {
+        currentStack.pop();
     }
 
     public List<Map> createCRUDMethods(String entity) {
