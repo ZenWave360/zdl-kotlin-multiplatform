@@ -11,8 +11,9 @@ public class ZdlModel extends FluentMap {
         put("entities", new FluentMap());
         put("enums", new FluentMap());
         put("relationships", new FluentMap());
-        put("inputs", new FluentMap());
         put("services", new FluentMap());
+        put("inputs", new FluentMap());
+        put("outputs", new FluentMap());
         put("events", new FluentMap());
         put("locations", new FluentMap());
     }

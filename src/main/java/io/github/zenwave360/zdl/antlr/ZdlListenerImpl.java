@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.*;
 
-public class ZdlListenerImpl extends ZdlBaseListener {
+public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListener {
 
     ZdlModel model = new ZdlModel();
     Stack<FluentMap> currentStack = new Stack<>();
@@ -28,23 +28,23 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void enterZdl(ZdlParser.ZdlContext ctx) {
+    public void enterZdl(io.github.zenwave360.zdl.antlr.ZdlParser.ZdlContext ctx) {
 
     }
 
     @Override
-    public void enterGlobal_javadoc(ZdlParser.Global_javadocContext ctx) {
+    public void enterGlobal_javadoc(io.github.zenwave360.zdl.antlr.ZdlParser.Global_javadocContext ctx) {
         var javadoc = getText(ctx);
         model.put("javadoc", javadoc(javadoc));
     }
 
     @Override
-    public void enterLegacy_constants(ZdlParser.Legacy_constantsContext ctx) {
+    public void enterLegacy_constants(io.github.zenwave360.zdl.antlr.ZdlParser.Legacy_constantsContext ctx) {
         ctx.LEGACY_CONSTANT().stream().map(TerminalNode::getText).map(c -> c.split("=")).forEach(c -> model.appendTo("constants", c[0], c[1]));
     }
 
     @Override
-    public void enterConfig_option(ZdlParser.Config_optionContext ctx) {
+    public void enterConfig_option(io.github.zenwave360.zdl.antlr.ZdlParser.Config_optionContext ctx) {
         var name = ctx.option_name().getText();
         var value = ctx.option_value() != null? getValueText(ctx.option_value().value()) : null;
         var array = ctx.option_value() != null? getArray(ctx.option_value().array()) : null;
@@ -53,7 +53,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void enterApi(ZdlParser.ApiContext ctx) {
+    public void enterApi(io.github.zenwave360.zdl.antlr.ZdlParser.ApiContext ctx) {
         var name = ctx.api_name().getText();
         var type = ctx.api_type().getText();
         var role = ctx.api_role().getText();
@@ -70,7 +70,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void enterApi_config(ZdlParser.Api_configContext ctx) {
+    public void enterApi_config(io.github.zenwave360.zdl.antlr.ZdlParser.Api_configContext ctx) {
         var name = ctx.option_name().getText();
         var value = ctx.option_value() != null? getValueText(ctx.option_value().value()) : null;
         var array = ctx.option_value() != null? getArray(ctx.option_value().array()) : null;
@@ -79,12 +79,12 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void exitApi(ZdlParser.ApiContext ctx) {
+    public void exitApi(io.github.zenwave360.zdl.antlr.ZdlParser.ApiContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterEntity(ZdlParser.EntityContext ctx) {
+    public void enterEntity(io.github.zenwave360.zdl.antlr.ZdlParser.EntityContext ctx) {
         var name = ctx.entity_name().getText();
         var javadoc = getText(ctx.javadoc());
         var tableName = ctx.entity_table_name() != null? ctx.entity_table_name().ID().getText() : null;
@@ -100,7 +100,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void exitEntity(ZdlParser.EntityContext ctx) {
+    public void exitEntity(io.github.zenwave360.zdl.antlr.ZdlParser.EntityContext ctx) {
         currentStack.pop();
     }
 
@@ -124,7 +124,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void enterOption(ZdlParser.OptionContext ctx) {
+    public void enterOption(io.github.zenwave360.zdl.antlr.ZdlParser.OptionContext ctx) {
         var name = ctx.reserved_option() != null? ctx.reserved_option().getText().replace("@", "") : getText(ctx.option_name());
         var value = ctx.option_value() != null? getValueText(ctx.option_value().value()) : null;
         var array = ctx.option_value() != null? getArray(ctx.option_value().array()) : null;
@@ -134,9 +134,9 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void enterField(ZdlParser.FieldContext ctx) {
+    public void enterField(io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext ctx) {
         var name = getText(ctx.field_name());
-        var type = ctx.field_type().ID().getText();
+        var type = ctx.field_type() != null && ctx.field_type().ID() != null? ctx.field_type().ID().getText() : null;
         var javadoc = first(getText(ctx.javadoc(), getText(ctx.suffix_javadoc())));
         var isEnum = false; // TODO
         var isEntity = false; // TODO
@@ -161,7 +161,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         model.setLocation(entityLocation + ".javadoc", getLocations(first(ctx.javadoc(), ctx.suffix_javadoc())));
     }
 
-    private Map<String, Object> processFieldValidations(List<ZdlParser.Field_validationsContext> field_validations) {
+    private Map<String, Object> processFieldValidations(List<io.github.zenwave360.zdl.antlr.ZdlParser.Field_validationsContext> field_validations) {
         var validations = new FluentMap();
         if(field_validations != null) {
             field_validations.forEach(v -> {
@@ -174,28 +174,45 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void exitField(ZdlParser.FieldContext ctx) {
+    public void exitField(io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext ctx) {
         super.exitField(ctx);
     }
 
     @Override
-    public void enterNested_field(ZdlParser.Nested_fieldContext ctx) {
-        ZdlParser.FieldContext parent = (ZdlParser.FieldContext) ctx.getParent();
+    public void enterNested_field(io.github.zenwave360.zdl.antlr.ZdlParser.Nested_fieldContext ctx) {
+        io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext parent = (io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext) ctx.getParent();
+        var parentEntity = currentStack.peek();
+        var parentEntityFields = ((FluentMap) parentEntity.get("fields"));
+        var parentField = new ArrayList<>(parentEntityFields.values()).get(parentEntityFields.size() - 1);
         String entityName = parent.field_type().ID().getText();
         String entityJavadoc = getText(parent.javadoc());
         String tableName = parent.entity_table_name() != null? parent.entity_table_name().ID().getText() : null;
+        var validations = processNestedFieldValidations(ctx.nested_field_validations());
+        ((Map)parentField).put("validations", validations);
         currentStack.push(processEntity(entityName, entityJavadoc, tableName));
         currentStack.peek().appendTo("options", "embedded", true);
         model.appendTo(currentCollection, entityName, currentStack.peek());
     }
 
+    private Map<String, Object> processNestedFieldValidations(List<io.github.zenwave360.zdl.antlr.ZdlParser.Nested_field_validationsContext> field_validations) {
+        var validations = new FluentMap();
+        if(field_validations != null) {
+            field_validations.forEach(v -> {
+                var name = getText(v.nested_field_validation_name());
+                var value = first(getText(v.nested_field_validation_value()), "");
+                validations.with(name, Map.of("name", name, "value", value));
+            });
+        }
+        return validations;
+    }
+
     @Override
-    public void exitNested_field(ZdlParser.Nested_fieldContext ctx) {
+    public void exitNested_field(io.github.zenwave360.zdl.antlr.ZdlParser.Nested_fieldContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterEnum(ZdlParser.EnumContext ctx) {
+    public void enterEnum(io.github.zenwave360.zdl.antlr.ZdlParser.EnumContext ctx) {
         var name = getText(ctx.enum_name());
         var javadoc = getText(ctx.javadoc());
         currentStack.push(new FluentMap()
@@ -212,12 +229,12 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void exitEnum(ZdlParser.EnumContext ctx) {
+    public void exitEnum(io.github.zenwave360.zdl.antlr.ZdlParser.EnumContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterEnum_value(ZdlParser.Enum_valueContext ctx) {
+    public void enterEnum_value(io.github.zenwave360.zdl.antlr.ZdlParser.Enum_valueContext ctx) {
         var name = getText(ctx.enum_value_name());
         var javadoc = first(getText(ctx.javadoc(), getText(ctx.suffix_javadoc())));
         var value = ctx.enum_value_value() != null? getValueText(ctx.enum_value_value().value()) : null;
@@ -230,8 +247,8 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void enterRelationship(ZdlParser.RelationshipContext ctx) {
-        var parent = (ZdlParser.RelationshipsContext) ctx.parent;
+    public void enterRelationship(io.github.zenwave360.zdl.antlr.ZdlParser.RelationshipContext ctx) {
+        var parent = (io.github.zenwave360.zdl.antlr.ZdlParser.RelationshipsContext) ctx.parent;
         var relationshipType = parent.relationship_type().getText();
 
         var from = getText(ctx.relationship_from().relationship_definition().relationship_entity_name());
@@ -261,12 +278,12 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         model.getRelationships().appendTo(relationshipType, relationshipName, relationship);
     }
 
-    private Map<String, Object> relationshipOptions(List<ZdlParser.OptionContext> options) {
+    private Map<String, Object> relationshipOptions(List<io.github.zenwave360.zdl.antlr.ZdlParser.OptionContext> options) {
         return options.stream().collect(Collectors.toMap(o -> getText(o.option_name()), o -> getText(o.option_value(), true)));
     }
 
     @Override
-    public void enterService_legacy(ZdlParser.Service_legacyContext ctx) {
+    public void enterService_legacy(io.github.zenwave360.zdl.antlr.ZdlParser.Service_legacyContext ctx) {
         var serviceName = ctx.ID().getText();
         String serviceJavadoc = null; // getText(ctx.javadoc());
         var serviceAggregates = ctx.service_aggregates() != null? Arrays.asList(ctx.service_aggregates().getText().split(",")) : null;
@@ -275,7 +292,6 @@ public class ZdlListenerImpl extends ZdlBaseListener {
                 .with("isLegacy", true)
                 .with("className", camelCase(serviceName))
                 .with("javadoc", javadoc(serviceJavadoc))
-                .with("comment", javadoc(serviceJavadoc))
                 .with("aggregates", serviceAggregates)
                 .with("methods", createCRUDMethods(serviceAggregates))
         );
@@ -283,12 +299,12 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void exitService_legacy(ZdlParser.Service_legacyContext ctx) {
+    public void exitService_legacy(io.github.zenwave360.zdl.antlr.ZdlParser.Service_legacyContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterService(ZdlParser.ServiceContext ctx) {
+    public void enterService(io.github.zenwave360.zdl.antlr.ZdlParser.ServiceContext ctx) {
         var serviceName = ctx.ID().getText();
         var serviceJavadoc = getText(ctx.javadoc());
         var serviceAggregates = ctx.service_aggregates() != null? Arrays.asList(ctx.service_aggregates().getText().split(",")) : null;
@@ -296,7 +312,6 @@ public class ZdlListenerImpl extends ZdlBaseListener {
                 .with("name", serviceName)
                 .with("className", camelCase(serviceName))
                 .with("javadoc", javadoc(serviceJavadoc))
-                .with("comment", javadoc(serviceJavadoc))
                 .with("aggregates", serviceAggregates)
                 .with("methods", new FluentMap())
         );
@@ -304,18 +319,19 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void exitService(ZdlParser.ServiceContext ctx) {
+    public void exitService(io.github.zenwave360.zdl.antlr.ZdlParser.ServiceContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterService_method(ZdlParser.Service_methodContext ctx) {
+    public void enterService_method(io.github.zenwave360.zdl.antlr.ZdlParser.Service_methodContext ctx) {
         var methodName = getText(ctx.service_method_name());
         var methodParamId = ctx.service_method_parameter_id() != null? "id" : null;
         var methodParameter = ctx.service_method_parameter() != null? ctx.service_method_parameter().getText() : null;
         var returnType = ctx.service_method_return() != null? ctx.service_method_return().ID().getText() : null;
         var returnTypeIsArray = ctx.service_method_return() != null? ctx.service_method_return().ARRAY() != null : null;
         var withEvents = getServiceMethodEvents(ctx.service_method_with_events());
+        var javadoc = first(getText(ctx.javadoc(), getText(ctx.suffix_javadoc())));
 
         var method = new FluentMap()
                 .with("name", methodName)
@@ -324,17 +340,18 @@ public class ZdlListenerImpl extends ZdlBaseListener {
                 .with("returnType", returnType)
                 .with("returnTypeIsArray", returnTypeIsArray)
                 .with("withEvents", withEvents)
+                .with("javadoc", javadoc)
                 ;
         currentStack.peek().appendTo("methods", methodName, method);
         currentStack.push(method);
     }
 
     @Override
-    public void exitService_method(ZdlParser.Service_methodContext ctx) {
+    public void exitService_method(io.github.zenwave360.zdl.antlr.ZdlParser.Service_methodContext ctx) {
         currentStack.pop();
     }
 
-    private List<Object> getServiceMethodEvents(ZdlParser.Service_method_with_eventsContext ctx) {
+    private List<Object> getServiceMethodEvents(io.github.zenwave360.zdl.antlr.ZdlParser.Service_method_with_eventsContext ctx) {
         var events = new ArrayList<>();
         if (ctx != null) {
             ctx.service_method_events().forEach(event -> {
@@ -351,7 +368,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void enterEvent(ZdlParser.EventContext ctx) {
+    public void enterEvent(io.github.zenwave360.zdl.antlr.ZdlParser.EventContext ctx) {
         var name = ctx.event_name().getText();
         var channel = getText(ctx.event_channel());
         var javadoc = getText(ctx.javadoc());
@@ -368,7 +385,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void exitEvent(ZdlParser.EventContext ctx) {
+    public void exitEvent(io.github.zenwave360.zdl.antlr.ZdlParser.EventContext ctx) {
         currentStack.pop();
     }
 
@@ -383,7 +400,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
 //    }
 
     @Override
-    public void enterInput(ZdlParser.InputContext ctx) {
+    public void enterInput(io.github.zenwave360.zdl.antlr.ZdlParser.InputContext ctx) {
         var name = ctx.input_name().getText();
         var javadoc = getText(ctx.javadoc());
         currentStack.push(processEntity(name, javadoc, null));
@@ -392,7 +409,21 @@ public class ZdlListenerImpl extends ZdlBaseListener {
     }
 
     @Override
-    public void exitInput(ZdlParser.InputContext ctx) {
+    public void exitInput(io.github.zenwave360.zdl.antlr.ZdlParser.InputContext ctx) {
+        currentStack.pop();
+    }
+
+    @Override
+    public void enterOutput(io.github.zenwave360.zdl.antlr.ZdlParser.OutputContext ctx) {
+        var name = ctx.output_name().getText();
+        var javadoc = getText(ctx.javadoc());
+        currentStack.push(processEntity(name, javadoc, null));
+        model.appendTo("outputs", name, currentStack.peek());
+        currentCollection = "outputs";
+    }
+
+    @Override
+    public void exitOutput(io.github.zenwave360.zdl.antlr.ZdlParser.OutputContext ctx) {
         currentStack.pop();
     }
 

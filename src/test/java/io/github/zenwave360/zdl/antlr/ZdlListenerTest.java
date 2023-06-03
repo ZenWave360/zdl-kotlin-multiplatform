@@ -33,6 +33,14 @@ public class ZdlListenerTest {
     }
 
     @Test
+    public void parseZdl_NestedId_Inputs_Outputs() throws Exception {
+
+        ZdlModel model = parseZdl("src/test/resources/nested-input-output-model.zdl");
+
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+    }
+
+    @Test
     public void parseZdl_UnrecognizedTokens() throws Exception {
 
         ZdlModel model = parseZdl("src/test/resources/unrecognized-tokens.zdl");

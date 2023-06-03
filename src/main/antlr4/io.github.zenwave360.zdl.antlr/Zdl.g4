@@ -8,6 +8,7 @@ OPENAPI: 'openapi';
 ENTITY: 'entity';
 ENUM: 'enum';
 INPUT: 'input';
+OUTPUT: 'output';
 EVENT: 'event';
 RELATIONSHIP: 'relationship';
 MANY_TO_MANY: 'ManyToMany';
@@ -29,6 +30,7 @@ OPENAPI_OPTION: '@openapi';
 ENTITY_OPTION: '@entity';
 SERVICE_OPTION: '@service';
 INPUT_OPTION: '@input';
+OUTPUT_OPTION: '@output';
 EVENT_OPTION: '@event';
 RELATIONSHIP_OPTION: '@relationship';
 ENUM_OPTION: '@enum';
@@ -83,7 +85,7 @@ PATTERN_REGEX: '/' .*? '/' ; // TODO: improve regex
 ERRCHAR: . -> channel(HIDDEN);
 
 // Rules
-zdl: global_javadoc? legacy_constants? config? apis? (entity | enum | input | event | relationships | service | service_legacy)* EOF;
+zdl: global_javadoc? legacy_constants? config? apis? (entity | enum | input | output | event | relationships | service | service_legacy)* EOF;
 global_javadoc: JAVADOC;
 javadoc: JAVADOC;
 suffix_javadoc: JAVADOC;
@@ -104,14 +106,15 @@ api_configs: (api_config)*;
 api_config: option_name option_value;
 
 // values
-value: ID | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL;
+value: simple | object;
+simple: ID | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL;
 pair: ID ':' value;
 object: '{' pair (',' pair)* '}';
 array: '['? value (',' value)* ']'?;
 
 // @options
 option: reserved_option ('(' option_value ')')? | '@' option_name ('(' option_value ')')?;
-reserved_option: CONFIG_OPTION | APIS_OPTION | OPENAPI_OPTION | ASYNCAPI_OPTION | ENTITY_OPTION | SERVICE_OPTION | INPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGEABLE_OPTION;
+reserved_option: CONFIG_OPTION | APIS_OPTION | OPENAPI_OPTION | ASYNCAPI_OPTION | ENTITY_OPTION | SERVICE_OPTION | INPUT_OPTION | OUTPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGEABLE_OPTION;
 option_name: ID;
 option_value: value | array | object;
 
@@ -123,14 +126,16 @@ entity_body: '{' fields '}';
 
 fields: (field FIELD_SEPARATOR?)*;
 field: javadoc? (option)* field_name field_type entity_table_name? (field_validations)* suffix_javadoc? (nested_field)?;
-nested_field: '{' (field)* '}';
+nested_field: '{' (field)* '}' nested_field_validations*;
 field_name: ID;
 field_type: ID | ID ARRAY;
 //field_validations: REQUIRED | UNIQUE | min_validation | max_validation | minlength_validation | maxlength_validation | pattern_validation;
 field_validations: field_validation_name ('(' field_validation_value ')')?;
 field_validation_name: REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
 field_validation_value: INT | ID | PATTERN_REGEX;
-
+nested_field_validations: nested_field_validation_name ('(' nested_field_validation_value ')')?;
+nested_field_validation_name: REQUIRED | UNIQUE;
+nested_field_validation_value: INT | ID | PATTERN_REGEX;
 
 // enums
 enum: javadoc? (option)* ENUM enum_name enum_body;
@@ -143,6 +148,10 @@ enum_value_value: value;
 // inputs
 input: javadoc? (option)* INPUT input_name '{' fields '}';
 input_name: ID;
+
+// outputs
+output: javadoc? (option)* OUTPUT output_name '{' fields '}';
+output_name: ID;
 
 // events
 event: javadoc? (option)* EVENT event_name ('(' event_channel ')')? '{' fields '}';
@@ -166,7 +175,7 @@ relationship_description_field: '(' ID ')';
 // services
 service: javadoc? (option)*  SERVICE ID FOR '(' service_aggregates ')' '{' service_method* '}';
 service_aggregates: ID (',' ID)*;
-service_method: javadoc? (option)* service_method_name '(' service_method_parameter_id? ','? service_method_parameter? ')' service_method_return? service_method_with_events?;
+service_method: javadoc? (option)* service_method_name '(' service_method_parameter_id? ','? service_method_parameter? ')' service_method_return? service_method_with_events? suffix_javadoc?;
 service_method_name: ID;
 service_method_parameter_id: 'id';
 service_method_parameter: ID;
@@ -174,7 +183,7 @@ service_method_return: ID | ID ARRAY;
 service_method_with_events: WITH_EVENTS (service_method_events)*;
 service_method_events: service_method_event | service_method_events_or;
 service_method_event: ID;
-service_method_events_or: '(' ID ('|' ID)* ')';
+service_method_events_or: '(' ID ('|' ID)* ')' | '[' ID ('|' ID)* ']';
 
 service_legacy: SERVICE service_aggregates 'with' ID;
 

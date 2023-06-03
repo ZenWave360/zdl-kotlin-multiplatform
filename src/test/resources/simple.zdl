@@ -93,25 +93,38 @@ input CustomerInput {
   }
 }
 
+output CustomerDTO {
+  username String
+  email String
+}
+
 service Customer, CustomerOrder with CustomerLegacyServer
 
 /**
- Service javadoc comment
- */
-@rest
+Service javadoc comment
+*/
+@rest("/customers")
 service CustomerService for (Customer) {
-  /**
-   * Create customer javadoc comment
-   */
-  @command(createCustomer)
-  createCustomer(Customer) Customer withEvents (CustomerCreated | CustomerCreatedFailed) CustomerUpdated
-  @event(onCustomerCreated)
-  updateCustomer(Customer) Customer withEvents CustomerUpdated /** update customer javadoc comment */
-  deleteCustomer(id) withEvents CustomerDeleted
-  getCustomer(id) Customer
+    /**
+     * Create customer javadoc comment
+     */
+    @post("/customers")
+    @asyncapi({ api: "BASA", operationId: "createCustomer"})
+    @query({api: "doxis", operationId: "createCustomer"})
+    createCustomer(CustomerInput) Customer withEvents CustomerEvent [CustomerCreated|CustomerCreatedFailed]
 
-  @pageable
-  listCustomers() Customer[]
+    @put("/customers/{customerId}")
+    updateCustomer(CustomerInput) Customer withEvents CustomerEvent CustomerUpdated /** update customer javadoc comment */
+
+    @delete("/customers/{customerId}")
+    deleteCustomer(id) withEvents CustomerDeleted
+
+    @get("/customers/{customerId}")
+    getCustomer(id) Customer
+
+    @get({path: "/customers", params: {search: "string"}})
+    @pageable
+    listCustomers() Customer[]
 }
 
 @topic(tratra)

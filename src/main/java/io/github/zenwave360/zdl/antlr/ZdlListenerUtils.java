@@ -25,6 +25,19 @@ class ZdlListenerUtils {
         if(ctx == null) {
             return null;
         }
+        if(ctx.simple() != null) {
+            return getValueText(ctx.simple());
+        }
+        if(ctx.object() != null) {
+            return getObject(ctx.object());
+        }
+        return getText(ctx);
+    }
+
+    static Object getValueText(ZdlParser.SimpleContext ctx) {
+        if(ctx == null) {
+            return null;
+        }
         if(ctx.ID() != null) {
             return ctx.ID().getText();
         }
