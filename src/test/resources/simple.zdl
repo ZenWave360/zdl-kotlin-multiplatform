@@ -104,7 +104,7 @@ service CustomerService for (Customer) {
    * Create customer javadoc comment
    */
   @command(createCustomer)
-  createCustomer(Customer) Customer withEvents CustomerCreated
+  createCustomer(Customer) Customer withEvents (CustomerCreated | CustomerCreatedFailed) CustomerUpdated
   @event(onCustomerCreated)
   updateCustomer(Customer) Customer withEvents CustomerUpdated /** update customer javadoc comment */
   deleteCustomer(id) withEvents CustomerDeleted

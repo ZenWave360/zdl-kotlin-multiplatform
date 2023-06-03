@@ -5,6 +5,7 @@ import io.github.zenwave360.zdl.ZdlModel;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
@@ -314,7 +315,7 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         var methodParameter = ctx.service_method_parameter() != null? ctx.service_method_parameter().getText() : null;
         var returnType = ctx.service_method_return() != null? ctx.service_method_return().ID().getText() : null;
         var returnTypeIsArray = ctx.service_method_return() != null? ctx.service_method_return().ARRAY() != null : null;
-        var withEvents = getServiceMethodEvents(ctx.service_method_events());
+        var withEvents = getServiceMethodEvents(ctx.service_method_with_events());
 
         var method = new FluentMap()
                 .with("name", methodName)
@@ -333,10 +334,18 @@ public class ZdlListenerImpl extends ZdlBaseListener {
         currentStack.pop();
     }
 
-    private List<String> getServiceMethodEvents(ZdlParser.Service_method_eventsContext ctx) {
-        var events = new ArrayList<String>();
+    private List<Object> getServiceMethodEvents(ZdlParser.Service_method_with_eventsContext ctx) {
+        var events = new ArrayList<>();
         if (ctx != null) {
-            events.addAll(ctx.service_method_event().stream().map(RuleContext::getText).collect(Collectors.toList()));
+            ctx.service_method_events().forEach(event -> {
+                if (event.service_method_event() != null) {
+                    events.add(getText(event.service_method_event()));
+                }
+                if (event.service_method_events_or() != null) {
+                    var orEvents = event.service_method_events_or().ID().stream().map(ParseTree::getText).collect(Collectors.toList());
+                    events.add(orEvents);
+                }
+            });
         }
         return events;
     }

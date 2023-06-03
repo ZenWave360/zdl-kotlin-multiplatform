@@ -166,13 +166,15 @@ relationship_description_field: '(' ID ')';
 // services
 service: javadoc? (option)*  SERVICE ID FOR '(' service_aggregates ')' '{' service_method* '}';
 service_aggregates: ID (',' ID)*;
-service_method: javadoc? (option)* service_method_name '(' service_method_parameter_id? ','? service_method_parameter? ')' service_method_return? service_method_events?;
+service_method: javadoc? (option)* service_method_name '(' service_method_parameter_id? ','? service_method_parameter? ')' service_method_return? service_method_with_events?;
 service_method_name: ID;
 service_method_parameter_id: 'id';
 service_method_parameter: ID;
 service_method_return: ID | ID ARRAY;
-service_method_events: WITH_EVENTS (service_method_event)*;
+service_method_with_events: WITH_EVENTS (service_method_events)*;
+service_method_events: service_method_event | service_method_events_or;
 service_method_event: ID;
+service_method_events_or: '(' ID ('|' ID)* ')';
 
 service_legacy: SERVICE service_aggregates 'with' ID;
 
