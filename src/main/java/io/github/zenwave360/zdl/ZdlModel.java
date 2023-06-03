@@ -22,8 +22,20 @@ public class ZdlModel extends FluentMap {
         return (FluentMap) get("entities");
     }
 
+    public FluentMap getInputs() {
+        return (FluentMap) get("inputs");
+    }
+
+    public FluentMap getOutputs() {
+        return (FluentMap) get("outputs");
+    }
+
     public FluentMap getEnums() {
-        return (FluentMap) get("enums");
+        var enumsRoot = (FluentMap) get("enums");
+        if(enumsRoot != null) {
+            return (FluentMap) enumsRoot.get("enums");
+        }
+        return null;
     }
 
     public FluentMap getRelationships() {

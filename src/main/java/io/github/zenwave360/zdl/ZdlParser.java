@@ -22,6 +22,8 @@ public class ZdlParser {
         ParseTreeWalker walker = new ParseTreeWalker();
         ZdlListenerImpl listener = new ZdlListenerImpl();
         walker.walk(listener, tree);
-        return listener.getModel();
+        var zdlModel = listener.getModel();
+        zdlModel = ZdlModelPostProcessor.postProcess(zdlModel);
+        return zdlModel;
     }
 }

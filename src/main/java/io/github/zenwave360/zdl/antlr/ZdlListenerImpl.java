@@ -88,7 +88,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var name = ctx.entity_name().getText();
         var javadoc = getText(ctx.javadoc());
         var tableName = ctx.entity_table_name() != null? ctx.entity_table_name().ID().getText() : null;
-        currentStack.push(processEntity(name, javadoc, tableName));
+        currentStack.push(processEntity(name, javadoc, tableName).with("type", "entity"));
         model.appendTo("entities", name, currentStack.peek());
         currentCollection = "entities";
 
@@ -217,6 +217,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var javadoc = getText(ctx.javadoc());
         currentStack.push(new FluentMap()
                 .with("name", name)
+                .with("type", "enum")
                 .with("className", camelCase(name))
                 .with("javadoc", javadoc(javadoc))
                 .with("comment", javadoc(javadoc)));
@@ -375,6 +376,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var kebabCase = kebabCase(name);
         currentStack.push(new FluentMap()
                 .with("name", name)
+                .with("type", "event")
                 .with("channel", channel)
                 .with("kebabCase", kebabCase)
                 .with("javadoc", javadoc(javadoc))
@@ -403,7 +405,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterInput(io.github.zenwave360.zdl.antlr.ZdlParser.InputContext ctx) {
         var name = ctx.input_name().getText();
         var javadoc = getText(ctx.javadoc());
-        currentStack.push(processEntity(name, javadoc, null));
+        currentStack.push(processEntity(name, javadoc, null).with("type", "input"));
         model.appendTo("inputs", name, currentStack.peek());
         currentCollection = "inputs";
     }
@@ -417,7 +419,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterOutput(io.github.zenwave360.zdl.antlr.ZdlParser.OutputContext ctx) {
         var name = ctx.output_name().getText();
         var javadoc = getText(ctx.javadoc());
-        currentStack.push(processEntity(name, javadoc, null));
+        currentStack.push(processEntity(name, javadoc, null).with("type", "output"));
         model.appendTo("outputs", name, currentStack.peek());
         currentCollection = "outputs";
     }
