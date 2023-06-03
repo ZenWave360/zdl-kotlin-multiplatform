@@ -164,11 +164,11 @@ class ZdlListenerUtils {
         );
         crudMethods.add(new FluentMap()
                 .with("name", "list" + pluralize(entity))
-                .with("pageable", true)
+                .with("paginated", true)
                 .with("returnType", entity)
                 .with("returnTypeIsArray", true)
                 .with("options", new FluentMap()
-                        .with("pageable", true))
+                        .with("paginated", true))
         );
         crudMethods.add(new FluentMap()
                 .with("name", "delete" + entity)

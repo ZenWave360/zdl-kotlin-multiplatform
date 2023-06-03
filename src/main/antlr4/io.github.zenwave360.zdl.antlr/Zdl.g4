@@ -34,7 +34,7 @@ OUTPUT_OPTION: '@output';
 EVENT_OPTION: '@event';
 RELATIONSHIP_OPTION: '@relationship';
 ENUM_OPTION: '@enum';
-PAGEABLE_OPTION: '@pageable';
+PAGINATED_OPTION: '@paginated';
 
 REQUIRED: 'required';
 UNIQUE: 'unique';
@@ -114,7 +114,7 @@ array: '['? value (',' value)* ']'?;
 
 // @options
 option: reserved_option ('(' option_value ')')? | '@' option_name ('(' option_value ')')?;
-reserved_option: CONFIG_OPTION | APIS_OPTION | OPENAPI_OPTION | ASYNCAPI_OPTION | ENTITY_OPTION | SERVICE_OPTION | INPUT_OPTION | OUTPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGEABLE_OPTION;
+reserved_option: CONFIG_OPTION | APIS_OPTION | OPENAPI_OPTION | ASYNCAPI_OPTION | ENTITY_OPTION | SERVICE_OPTION | INPUT_OPTION | OUTPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGINATED_OPTION;
 option_name: ID;
 option_value: value | array | object;
 
