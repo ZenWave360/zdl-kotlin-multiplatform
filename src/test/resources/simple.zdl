@@ -4,8 +4,26 @@
 
 MAX_LENGTH=100
 
+config {
+  key value
+  persistence jpa
+  database mysql
+}
+
+apis {
+
+  /** Customer API javadoc comment */
+  asyncapi(client) BASA {
+    uri 'classpath:/basa-asyncapi.yml'
+    consumerPackage 'com.basa.consumer'
+    modelPackage 'com.basa.model'
+  }
+}
+
+
 /**
-* Customer javadoc comment
+  *
+  } Customer javadoc comment
 */
 @aggregate
 @service(CustomerService)
@@ -105,7 +123,7 @@ event CustomerCreated (customerEvents) {
 @topic(tratra)
 event CustomerUpdated(customerEvents) {
   customerId String
-  customer Customer {
+  customer CustomerPayload {
     username String
     tags String[]
     email String

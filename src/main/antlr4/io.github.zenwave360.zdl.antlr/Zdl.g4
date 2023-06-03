@@ -1,6 +1,10 @@
 grammar Zdl;
 
 // Keywords
+CONFIG: 'config';
+APIS: 'apis';
+ASYNCAPI: 'asyncapi';
+OPENAPI: 'openapi';
 ENTITY: 'entity';
 ENUM: 'enum';
 INPUT: 'input';
@@ -18,6 +22,10 @@ FOR: 'for';
 WITH_EVENTS: 'withEvents';
 
 // options with reserved tokens
+CONFIG_OPTION: '@config';
+APIS_OPTION: '@apis';
+ASYNCAPI_OPTION: '@asyncapi';
+OPENAPI_OPTION: '@openapi';
 ENTITY_OPTION: '@entity';
 SERVICE_OPTION: '@service';
 INPUT_OPTION: '@input';
@@ -75,28 +83,43 @@ PATTERN_REGEX: '/' .*? '/' ; // TODO: improve regex
 ERRCHAR: . -> channel(HIDDEN);
 
 // Rules
-zdl: global_javadoc? legacy_constants? (entity | enum | input | event | relationships | service | service_legacy)* EOF;
+zdl: global_javadoc? legacy_constants? config? apis? (entity | enum | input | event | relationships | service | service_legacy)* EOF;
 global_javadoc: JAVADOC;
 javadoc: JAVADOC;
 suffix_javadoc: JAVADOC;
 
 legacy_constants: LEGACY_CONSTANT*;
 
-value : ID | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL;
+config: CONFIG config_body;
+config_body: '{' config_option* '}';
+config_option: option_name option_value;
+
+apis: APIS '{' api* '}';
+api: javadoc? (option)* api_type ('(' api_role ')')? api_name api_body;
+api_type: ASYNCAPI | OPENAPI;
+api_role: ID;
+api_name: ID;
+api_body: '{' api_configs '}';
+api_configs: (api_config)*;
+api_config: option_name option_value;
+
+// values
+value: ID | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL;
 pair: ID ':' value;
 object: '{' pair (',' pair)* '}';
 array: '['? value (',' value)* ']'?;
 
 // @options
 option: reserved_option ('(' option_value ')')? | '@' option_name ('(' option_value ')')?;
-reserved_option: ENTITY_OPTION | SERVICE_OPTION | INPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGEABLE_OPTION;
+reserved_option: CONFIG_OPTION | APIS_OPTION | OPENAPI_OPTION | ASYNCAPI_OPTION | ENTITY_OPTION | SERVICE_OPTION | INPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGEABLE_OPTION;
 option_name: ID;
 option_value: value | array | object;
 
 // entities
-entity: javadoc? (option)* ENTITY entity_name entity_table_name? '{' fields '}';
+entity: javadoc? (option)* ENTITY entity_name entity_table_name? entity_body;
 entity_name: ID;
 entity_table_name: '(' ID ')';
+entity_body: '{' fields '}';
 
 fields: (field FIELD_SEPARATOR?)*;
 field: javadoc? (option)* field_name field_type entity_table_name? (field_validations)* suffix_javadoc? (nested_field)?;
@@ -110,8 +133,9 @@ field_validation_value: INT | ID | PATTERN_REGEX;
 
 
 // enums
-enum: javadoc? (option)* ENUM enum_name '{' (enum_value FIELD_SEPARATOR?)* '}';
+enum: javadoc? (option)* ENUM enum_name enum_body;
 enum_name: ID;
+enum_body: '{' (enum_value FIELD_SEPARATOR?)* '}';
 enum_value: javadoc? enum_value_name ('(' enum_value_value ')')? suffix_javadoc?;
 enum_value_name: ID;
 enum_value_value: value;
