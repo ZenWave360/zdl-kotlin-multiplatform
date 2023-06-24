@@ -5,7 +5,7 @@
 MAX_LENGTH=100
 
 config {
-  key value
+  basePackage "io.zenwave360.example"
   persistence jpa
   database mysql
 }
@@ -22,8 +22,7 @@ apis {
 
 
 /**
-  *
-  } Customer javadoc comment
+* Customer javadoc comment
 */
 @aggregate
 @service(CustomerService)

@@ -1,7 +1,5 @@
 package io.github.zenwave360.zdl.antlr;
 
-import io.github.zenwave360.zdl.FluentMap;
-import io.github.zenwave360.zdl.lang.Inflector;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.math.BigDecimal;
@@ -21,7 +19,7 @@ class ZdlListenerUtils {
         return ctx != null? ctx.getText() : defaultValue;
     }
 
-    static Object getValueText(ZdlParser.ValueContext ctx) {
+    static Object getValueText(io.github.zenwave360.zdl.antlr.ZdlParser.ValueContext ctx) {
         if(ctx == null) {
             return null;
         }
@@ -34,7 +32,7 @@ class ZdlListenerUtils {
         return getText(ctx);
     }
 
-    static Object getValueText(ZdlParser.SimpleContext ctx) {
+    static Object getValueText(io.github.zenwave360.zdl.antlr.ZdlParser.SimpleContext ctx) {
         if(ctx == null) {
             return null;
         }
@@ -70,7 +68,7 @@ class ZdlListenerUtils {
                 .replaceAll(quote + "$", "");
     }
 
-    static Object getObject(ZdlParser.ObjectContext ctx) {
+    static Object getObject(io.github.zenwave360.zdl.antlr.ZdlParser.ObjectContext ctx) {
         if(ctx == null) {
             return null;
         }
@@ -79,7 +77,7 @@ class ZdlListenerUtils {
         return map;
     }
 
-    static Object getArray(ZdlParser.ArrayContext ctx) {
+    static Object getArray(io.github.zenwave360.zdl.antlr.ZdlParser.ArrayContext ctx) {
         if(ctx == null) {
             return null;
         }
@@ -101,6 +99,10 @@ class ZdlListenerUtils {
     }
     static String kebabCase(String name) {
         return inflector.kebabCase(name);
+    }
+
+    static String snakeCase(String name) {
+        return inflector.underscore(name);
     }
 
     @SafeVarargs

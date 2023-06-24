@@ -1,9 +1,9 @@
-package io.github.zenwave360.zdl;
+package io.github.zenwave360.zdl.antlr;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class FluentMap extends LinkedHashMap<String, Object> {
+class FluentMap extends LinkedHashMap<String, Object> {
 
     public FluentMap with(String key, Object value) {
         put(key, value);

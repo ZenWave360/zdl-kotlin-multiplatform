@@ -2,6 +2,8 @@ package io.github.zenwave360.zdl;
 
 import io.github.zenwave360.zdl.antlr.ZdlLexer;
 import io.github.zenwave360.zdl.antlr.ZdlListenerImpl;
+import io.github.zenwave360.zdl.antlr.ZdlModelPostProcessor;
+import io.github.zenwave360.zdl.antlr.ZdlModelValidator;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -24,6 +26,7 @@ public class ZdlParser {
         walker.walk(listener, tree);
         var zdlModel = listener.getModel();
         zdlModel = ZdlModelPostProcessor.postProcess(zdlModel);
+        zdlModel = ZdlModelValidator.validate(zdlModel);
         return zdlModel;
     }
 }

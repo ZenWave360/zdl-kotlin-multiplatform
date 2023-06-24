@@ -1,9 +1,6 @@
 package io.github.zenwave360.zdl.antlr;
 
-import io.github.zenwave360.zdl.FluentMap;
-import io.github.zenwave360.zdl.ZdlModel;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -15,7 +12,19 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.*;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.camelCase;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.createCRUDMethods;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.first;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getArray;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getLocations;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getObject;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getText;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getValueText;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.javadoc;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.kebabCase;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.lowerCamelCase;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.pluralize;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.snakeCase;
 
 public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListener {
 
@@ -111,12 +120,12 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         return new FluentMap()
                 .with("name", name)
                 .with("className", className)
+                .with("tableName", tableName != null? tableName : snakeCase(name))
                 .with("instanceName", instanceName)
                 .with("classNamePlural", pluralize(name))
                 .with("instanceNamePlural", pluralize(instanceName))
                 .with("kebabCase", kebabCase)
                 .with("kebabCasePlural", pluralize(kebabCase))
-                .with("tableName", tableName)
                 .with("javadoc", javadoc(javadoc))
                 .with("options", new FluentMap())
                 .with("fields", new FluentMap())
@@ -189,7 +198,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         String tableName = parent.entity_table_name() != null? parent.entity_table_name().ID().getText() : null;
         var validations = processNestedFieldValidations(ctx.nested_field_validations());
         ((Map)parentField).put("validations", validations);
-        currentStack.push(processEntity(entityName, entityJavadoc, tableName));
+        currentStack.push(processEntity(entityName, entityJavadoc, tableName).with("type", currentCollection.split("\\.")[0]));
         currentStack.peek().appendTo("options", "embedded", true);
         model.appendTo(currentCollection, entityName, currentStack.peek());
     }
@@ -217,7 +226,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var javadoc = getText(ctx.javadoc());
         currentStack.push(new FluentMap()
                 .with("name", name)
-                .with("type", "enum")
+                .with("type", "enums")
                 .with("className", camelCase(name))
                 .with("javadoc", javadoc(javadoc))
                 .with("comment", javadoc(javadoc)));
@@ -376,7 +385,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var kebabCase = kebabCase(name);
         currentStack.push(new FluentMap()
                 .with("name", name)
-                .with("type", "event")
+                .with("type", "events")
                 .with("channel", channel)
                 .with("kebabCase", kebabCase)
                 .with("javadoc", javadoc(javadoc))
@@ -405,7 +414,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterInput(io.github.zenwave360.zdl.antlr.ZdlParser.InputContext ctx) {
         var name = ctx.input_name().getText();
         var javadoc = getText(ctx.javadoc());
-        currentStack.push(processEntity(name, javadoc, null).with("type", "input"));
+        currentStack.push(processEntity(name, javadoc, null).with("type", "inputs"));
         model.appendTo("inputs", name, currentStack.peek());
         currentCollection = "inputs";
     }
@@ -419,7 +428,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterOutput(io.github.zenwave360.zdl.antlr.ZdlParser.OutputContext ctx) {
         var name = ctx.output_name().getText();
         var javadoc = getText(ctx.javadoc());
-        currentStack.push(processEntity(name, javadoc, null).with("type", "output"));
+        currentStack.push(processEntity(name, javadoc, null).with("type", "outputs"));
         model.appendTo("outputs", name, currentStack.peek());
         currentCollection = "outputs";
     }

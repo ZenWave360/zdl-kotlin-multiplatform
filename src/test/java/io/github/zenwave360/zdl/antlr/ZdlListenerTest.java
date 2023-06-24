@@ -1,14 +1,9 @@
 package io.github.zenwave360.zdl.antlr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.zenwave360.zdl.ZdlModel;
 import io.github.zenwave360.zdl.ZdlParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

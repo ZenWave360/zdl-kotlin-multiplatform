@@ -1,8 +1,4 @@
-package io.github.zenwave360.zdl;
-
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+package io.github.zenwave360.zdl.antlr;
 
 public class ZdlModel extends FluentMap {
     public ZdlModel() {

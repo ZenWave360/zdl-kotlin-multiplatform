@@ -1,12 +1,15 @@
-package io.github.zenwave360.zdl;
+package io.github.zenwave360.zdl.antlr;
+
+import io.github.zenwave360.zdl.antlr.JSONPath;
+import io.github.zenwave360.zdl.antlr.ZdlModel;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class ZdlModelPostProcessor {
+public class ZdlModelPostProcessor {
 
-    static ZdlModel postProcess(ZdlModel model) {
+    public static ZdlModel postProcess(ZdlModel model) {
         var entities = model.getEntities();
         var inputs = model.getInputs();
         var outputs = model.getOutputs();

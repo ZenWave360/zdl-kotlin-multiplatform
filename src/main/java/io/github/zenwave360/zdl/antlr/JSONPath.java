@@ -1,4 +1,4 @@
-package io.github.zenwave360.zdl;
+package io.github.zenwave360.zdl.antlr;
 
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
