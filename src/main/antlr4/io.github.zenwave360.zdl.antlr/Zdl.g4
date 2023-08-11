@@ -1,5 +1,18 @@
 grammar Zdl;
 
+@members {
+	private int _currentRuleType = Token.INVALID_TYPE;
+
+	public int getCurrentRuleType() {
+		return _currentRuleType;
+	}
+
+	public void setCurrentRuleType(int ruleType) {
+		this._currentRuleType = ruleType;
+	}
+}
+
+
 // Keywords
 CONFIG: 'config';
 APIS: 'apis';
