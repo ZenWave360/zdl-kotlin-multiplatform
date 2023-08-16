@@ -49,7 +49,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void enterLegacy_constants(io.github.zenwave360.zdl.antlr.ZdlParser.Legacy_constantsContext ctx) {
-        ctx.LEGACY_CONSTANT().stream().map(TerminalNode::getText).map(c -> c.split("=")).forEach(c -> model.appendTo("constants", c[0], c[1]));
+        ctx.LEGACY_CONSTANT().stream().map(TerminalNode::getText).map(c -> c.split(" *= *")).forEach(c -> model.appendTo("constants", c[0], c[1]));
     }
 
     @Override
@@ -94,17 +94,18 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void enterEntity(io.github.zenwave360.zdl.antlr.ZdlParser.EntityContext ctx) {
-        var name = ctx.entity_name().getText();
+        var entity = ctx.entity_definition();
+        var name = entity.entity_name().getText();
         var javadoc = getText(ctx.javadoc());
-        var tableName = ctx.entity_table_name() != null? ctx.entity_table_name().ID().getText() : null;
+        var tableName = entity.entity_table_name() != null? entity.entity_table_name().ID().getText() : null;
         currentStack.push(processEntity(name, javadoc, tableName).with("type", "entity"));
         model.appendTo("entities", name, currentStack.peek());
         currentCollection = "entities";
 
         var entityLocation = currentCollection + "." + name;
         model.setLocation(entityLocation, getLocations(ctx));
-        model.setLocation(entityLocation + ".name", getLocations(ctx.entity_name()));
-        model.setLocation(entityLocation + ".tableName", getLocations(ctx.entity_table_name()));
+        model.setLocation(entityLocation + ".name", getLocations(entity.entity_name()));
+        model.setLocation(entityLocation + ".tableName", getLocations(entity.entity_table_name()));
         model.setLocation(entityLocation + ".body", getLocations(ctx.entity_body()));
     }
 
@@ -263,13 +264,13 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
         var from = getText(ctx.relationship_from().relationship_definition().relationship_entity_name());
         var fromField = getText(ctx.relationship_from().relationship_definition().relationship_field_name());
-        var commentInFrom = getText(ctx.relationship_from().relationship_javadoc());
-        var fromOptions = relationshipOptions(ctx.relationship_from().relationship_options().option());
+        var commentInFrom = getText(ctx.relationship_from().javadoc());
+        var fromOptions = relationshipOptions(ctx.relationship_from().annotations().option());
 
         var to = getText(ctx.relationship_to().relationship_definition().relationship_entity_name());
         var toField = getText(ctx.relationship_to().relationship_definition().relationship_field_name());
-        var commentInTo = getText(ctx.relationship_to().relationship_javadoc());
-        var toOptions = relationshipOptions(ctx.relationship_to().relationship_options().option());
+        var commentInTo = getText(ctx.relationship_to().javadoc());
+        var toOptions = relationshipOptions(ctx.relationship_to().annotations().option());
 
         var relationship = new FluentMap()
                 .with("type", relationshipType)

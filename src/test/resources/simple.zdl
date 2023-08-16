@@ -2,7 +2,8 @@
 * Global javadoc comment
 */
 
-MAX_LENGTH=100
+MIN_LENGTH=100
+MAX_LENGTH = 100
 
 config {
   basePackage "io.zenwave360.example"
@@ -43,8 +44,8 @@ enum OrderStatus {
   /** order completed */
   COMPLETED("3")
   /**
-    * order cancelled
-    */
+  * order cancelled
+  */
   CANCELLED('4')
 }
 
