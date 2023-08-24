@@ -27,8 +27,11 @@ RBRACK: ']';
 OR: '|';
 COMMA: ',';
 COLON: ':';
-
-OPTION_NAME: '@' [a-zA-Z_][a-zA-Z0-9_]*;
+TRUE: 'true';
+FALSE: 'false';
+NULL: 'null';
+EQUALS: '=';
+ARRAY: '[]';
 
 // Keywords
 CONFIG: 'config';
@@ -45,28 +48,12 @@ MANY_TO_MANY: 'ManyToMany';
 MANY_TO_ONE: 'ManyToOne';
 ONE_TO_MANY: 'OneToMany';
 ONE_TO_ONE: 'OneToOne';
-//fragment SERVICE_TOKEN: 'service';
-//SERVICE: ~'@' SERVICE_TOKEN; // not starting with @
 SERVICE: 'service';
 WITH: 'with';
 FOR: 'for';
 WITH_EVENTS: 'withEvents';
 
-// options with reserved tokens
-//fragment CONFIG_OPTION: '@config';
-//fragment APIS_OPTION: '@apis';
-//fragment ASYNCAPI_OPTION: '@asyncapi';
-//fragment OPENAPI_OPTION: '@openapi';
-//fragment ENTITY_OPTION: '@entity';
-//fragment SERVICE_OPTION: '@service';
-//fragment INPUT_OPTION: '@input';
-//fragment OUTPUT_OPTION: '@output';
-//fragment EVENT_OPTION: '@event';
-//fragment RELATIONSHIP_OPTION: '@relationship';
-//fragment ENUM_OPTION: '@enum';
-//fragment PAGINATED_OPTION: '@paginated';
-//RESERVED_OPTIONS: CONFIG_OPTION | APIS_OPTION | ASYNCAPI_OPTION | OPENAPI_OPTION | ENTITY_OPTION | SERVICE_OPTION | INPUT_OPTION | OUTPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGINATED_OPTION;
-
+// field validators
 REQUIRED: 'required';
 UNIQUE: 'unique';
 MIN: 'min';
@@ -74,13 +61,8 @@ MAX: 'max';
 MINLENGTH: 'minlength';
 MAXLENGTH: 'maxlength';
 PATTERN: 'pattern';
-AT: '@';
-ARRAY: '[]';
-TRUE: 'true';
-FALSE: 'false';
-NULL: 'null';
-EQUALS: '=';
 
+OPTION_NAME: '@' [a-zA-Z_][a-zA-Z0-9_]*;
 
 fragment DIGIT : [0-9] ;
 
@@ -150,9 +132,6 @@ annotations: option*;
 option: option_name (LPAREN option_value RPAREN)?; // (LPAREN option_value RPAREN)? | '@' option_name (LPAREN option_value RPAREN)?;
 option_name: OPTION_NAME;
 option_value: complex_value;
-//reserved_option: CONFIG_OPTION | APIS_OPTION | OPENAPI_OPTION | ASYNCAPI_OPTION | ENTITY_OPTION | SERVICE_OPTION | INPUT_OPTION | OUTPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGINATED_OPTION;
-//reserved_option: RESERVED_OPTIONS;
-//option_value: value | array | object;
 
 // entities
 entity: javadoc? annotations ENTITY entity_definition entity_body;
@@ -220,6 +199,6 @@ service_method_events: service_method_event | service_method_events_or;
 service_method_event: ID;
 service_method_events_or: LPAREN ID (OR ID)* RPAREN | LBRACK ID (OR ID)* RBRACK;
 
-service_legacy: SERVICE service_aggregates 'with' ID;
+service_legacy: SERVICE service_aggregates WITH ID;
 
 
