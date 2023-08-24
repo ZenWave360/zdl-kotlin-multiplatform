@@ -10,11 +10,23 @@ grammar Zdl;
 	public void setCurrentRuleType(int ruleType) {
 		this._currentRuleType = ruleType;
 	}
+}
 
-    @Override
-    public Token emit() {
-
-        return super.emit();
+@parser::members {
+    public Token match(int ttype) throws RecognitionException {
+        try { // hack to not parse suffix javadoc after new lines (hidden tokens)
+            if(getRuleContext() instanceof Suffix_javadocContext) {
+                // System.out.println("RULE_suffix_javadoc");
+                int currentTokenIndex = getCurrentToken().getTokenIndex();
+                var prevToken = getTokenStream().get(currentTokenIndex - 1);
+                if(prevToken.getText().contains("\n")) {
+                    return null;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return super.match(ttype);
     }
 }
 

@@ -1,0 +1,6 @@
+entity A {
+  firstField String
+  /** name javadoc */
+  name String
+  count Integer /** count javadoc */
+}

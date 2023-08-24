@@ -44,6 +44,11 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
+    public void enterSuffix_javadoc(io.github.zenwave360.zdl.antlr.ZdlParser.Suffix_javadocContext ctx) {
+        super.enterSuffix_javadoc(ctx);
+    }
+
+    @Override
     public void enterGlobal_javadoc(io.github.zenwave360.zdl.antlr.ZdlParser.Global_javadocContext ctx) {
         var javadoc = getText(ctx);
         model.put("javadoc", javadoc(javadoc));

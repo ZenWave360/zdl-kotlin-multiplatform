@@ -13,6 +13,14 @@ public class ZdlListenerTest {
     ObjectMapper mapper = new ObjectMapper();
 
     @Test
+    public void parseZdl_SuffixJavadoc() throws Exception {
+
+        ZdlModel model = parseZdl("src/test/resources/suffix_javadoc.zdl");
+
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+    }
+
+    @Test
     public void parseZdl_Simple() throws Exception {
 
         ZdlModel model = parseZdl("src/test/resources/simple.zdl");
