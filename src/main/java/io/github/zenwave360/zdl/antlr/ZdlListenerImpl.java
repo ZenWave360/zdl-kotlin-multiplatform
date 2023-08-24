@@ -16,8 +16,10 @@ import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.camelCase;
 import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.createCRUDMethods;
 import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.first;
 import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getArray;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getComplexValue;
 import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getLocations;
 import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getObject;
+import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getOptionValue;
 import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getText;
 import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getValueText;
 import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.javadoc;
@@ -54,11 +56,9 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void enterConfig_option(io.github.zenwave360.zdl.antlr.ZdlParser.Config_optionContext ctx) {
-        var name = ctx.option_name().getText();
-        var value = ctx.option_value() != null? getValueText(ctx.option_value().value()) : null;
-        var array = ctx.option_value() != null? getArray(ctx.option_value().array()) : null;
-        var object = ctx.option_value() != null? getObject(ctx.option_value().object()) : null;
-        model.appendTo("config", name, first(value, array, object, true));
+        var name = ctx.field_name().getText();
+        var value = getComplexValue(ctx.complex_value());
+        model.appendTo("config", name, value);
     }
 
     @Override
@@ -80,11 +80,9 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void enterApi_config(io.github.zenwave360.zdl.antlr.ZdlParser.Api_configContext ctx) {
-        var name = ctx.option_name().getText();
-        var value = ctx.option_value() != null? getValueText(ctx.option_value().value()) : null;
-        var array = ctx.option_value() != null? getArray(ctx.option_value().array()) : null;
-        var object = ctx.option_value() != null? getObject(ctx.option_value().object()) : null;
-        currentStack.peek().appendTo("config", name, first(value, array, object, true));
+        var name = ctx.field_name().getText();
+        var value = getComplexValue(ctx.complex_value());
+        currentStack.peek().appendTo("config", name, value);
     }
 
     @Override
@@ -135,11 +133,11 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void enterOption(io.github.zenwave360.zdl.antlr.ZdlParser.OptionContext ctx) {
-        var name = ctx.reserved_option() != null? ctx.reserved_option().getText().replace("@", "") : getText(ctx.option_name());
-        var value = ctx.option_value() != null? getValueText(ctx.option_value().value()) : null;
-        var array = ctx.option_value() != null? getArray(ctx.option_value().array()) : null;
-        var object = ctx.option_value() != null? getObject(ctx.option_value().object()) : null;
-        currentStack.peek().appendTo("options", name, first(value, array, object, true));
+//        var name = ctx.reserved_option() != null? ctx.reserved_option().getText().replace("@", "") : getText(ctx.option_name());
+        var name = ctx.option_name().getText().replace("@", "");
+        var value = getOptionValue(ctx.option_value());
+        currentStack.peek().appendTo("options", name, value);
+        currentStack.peek().appendToList("optionsList", new FluentMap().with("name", name).with("value", value));
         super.enterOption(ctx);
     }
 
@@ -248,7 +246,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterEnum_value(io.github.zenwave360.zdl.antlr.ZdlParser.Enum_valueContext ctx) {
         var name = getText(ctx.enum_value_name());
         var javadoc = first(getText(ctx.javadoc(), getText(ctx.suffix_javadoc())));
-        var value = ctx.enum_value_value() != null? getValueText(ctx.enum_value_value().value()) : null;
+        var value = ctx.enum_value_value() != null? getValueText(ctx.enum_value_value().simple()) : null;
         currentStack.peek().appendTo("values", name, new FluentMap()
                 .with("name", name)
                 .with("javadoc", javadoc(javadoc))
@@ -290,7 +288,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     private Map<String, Object> relationshipOptions(List<io.github.zenwave360.zdl.antlr.ZdlParser.OptionContext> options) {
-        return options.stream().collect(Collectors.toMap(o -> getText(o.option_name()), o -> getText(o.option_value(), true)));
+        return options.stream().collect(Collectors.toMap(o -> getText(o.option_name()), o -> getText(o.option_value().complex_value(), true)));
     }
 
     @Override

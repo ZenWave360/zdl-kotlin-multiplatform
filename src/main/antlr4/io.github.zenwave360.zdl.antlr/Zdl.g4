@@ -28,6 +28,8 @@ OR: '|';
 COMMA: ',';
 COLON: ':';
 
+OPTION_NAME: '@' [a-zA-Z_][a-zA-Z0-9_]*;
+
 // Keywords
 CONFIG: 'config';
 APIS: 'apis';
@@ -51,19 +53,19 @@ FOR: 'for';
 WITH_EVENTS: 'withEvents';
 
 // options with reserved tokens
-fragment CONFIG_OPTION: '@config';
-fragment APIS_OPTION: '@apis';
-fragment ASYNCAPI_OPTION: '@asyncapi';
-fragment OPENAPI_OPTION: '@openapi';
-fragment ENTITY_OPTION: '@entity';
-fragment SERVICE_OPTION: '@service';
-fragment INPUT_OPTION: '@input';
-fragment OUTPUT_OPTION: '@output';
-fragment EVENT_OPTION: '@event';
-fragment RELATIONSHIP_OPTION: '@relationship';
-fragment ENUM_OPTION: '@enum';
-fragment PAGINATED_OPTION: '@paginated';
-RESERVED_OPTIONS: CONFIG_OPTION | APIS_OPTION | ASYNCAPI_OPTION | OPENAPI_OPTION | ENTITY_OPTION | SERVICE_OPTION | INPUT_OPTION | OUTPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGINATED_OPTION;
+//fragment CONFIG_OPTION: '@config';
+//fragment APIS_OPTION: '@apis';
+//fragment ASYNCAPI_OPTION: '@asyncapi';
+//fragment OPENAPI_OPTION: '@openapi';
+//fragment ENTITY_OPTION: '@entity';
+//fragment SERVICE_OPTION: '@service';
+//fragment INPUT_OPTION: '@input';
+//fragment OUTPUT_OPTION: '@output';
+//fragment EVENT_OPTION: '@event';
+//fragment RELATIONSHIP_OPTION: '@relationship';
+//fragment ENUM_OPTION: '@enum';
+//fragment PAGINATED_OPTION: '@paginated';
+//RESERVED_OPTIONS: CONFIG_OPTION | APIS_OPTION | ASYNCAPI_OPTION | OPENAPI_OPTION | ENTITY_OPTION | SERVICE_OPTION | INPUT_OPTION | OUTPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGINATED_OPTION;
 
 REQUIRED: 'required';
 UNIQUE: 'unique';
@@ -121,9 +123,17 @@ suffix_javadoc: JAVADOC;
 
 legacy_constants: LEGACY_CONSTANT*;
 
+// values
+complex_value: value | array | object;
+value: simple | object;
+simple: ID | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL;
+pair: ID COLON value;
+object: LBRACE pair (COMMA pair)* RBRACE;
+array: LBRACK? value (COMMA value)* RBRACK?;
+
 config: CONFIG config_body;
 config_body: LBRACE config_option* RBRACE;
-config_option: option_name option_value;
+config_option: field_name complex_value;
 
 apis: APIS apis_body;
 apis_body: LBRACE api* RBRACE;
@@ -133,22 +143,16 @@ api_role: ID;
 api_name: ID;
 api_body: LBRACE api_configs RBRACE;
 api_configs: (api_config)*;
-api_config: option_name option_value;
-
-// values
-value: simple | object;
-simple: ID | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL;
-pair: ID COLON value;
-object: LBRACE pair (COMMA pair)* RBRACE;
-array: LBRACK? value (COMMA value)* RBRACK?;
+api_config: field_name complex_value;
 
 // @options
 annotations: option*;
-option: reserved_option (LPAREN option_value RPAREN)? | '@' option_name (LPAREN option_value RPAREN)?;
+option: option_name (LPAREN option_value RPAREN)?; // (LPAREN option_value RPAREN)? | '@' option_name (LPAREN option_value RPAREN)?;
+option_name: OPTION_NAME;
+option_value: complex_value;
 //reserved_option: CONFIG_OPTION | APIS_OPTION | OPENAPI_OPTION | ASYNCAPI_OPTION | ENTITY_OPTION | SERVICE_OPTION | INPUT_OPTION | OUTPUT_OPTION | EVENT_OPTION | RELATIONSHIP_OPTION | ENUM_OPTION | PAGINATED_OPTION;
-reserved_option: RESERVED_OPTIONS;
-option_name: ID;
-option_value: value | array | object;
+//reserved_option: RESERVED_OPTIONS;
+//option_value: value | array | object;
 
 // entities
 entity: javadoc? annotations ENTITY entity_definition entity_body;
@@ -176,7 +180,7 @@ enum_name: ID;
 enum_body: LBRACE (enum_value)* RBRACE;
 enum_value: javadoc? enum_value_name (LPAREN enum_value_value RPAREN)? suffix_javadoc? COMMA?;
 enum_value_name: ID;
-enum_value_value: value;
+enum_value_value: simple;
 
 // inputs
 input: javadoc? annotations INPUT input_name LBRACE fields RBRACE;

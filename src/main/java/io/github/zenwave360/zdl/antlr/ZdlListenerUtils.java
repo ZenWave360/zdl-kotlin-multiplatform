@@ -1,5 +1,7 @@
 package io.github.zenwave360.zdl.antlr;
 
+import io.github.zenwave360.zdl.antlr.ZdlParser.Complex_valueContext;
+import io.github.zenwave360.zdl.antlr.ZdlParser.Option_valueContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.math.BigDecimal;
@@ -58,6 +60,22 @@ class ZdlListenerUtils {
             return false;
         }
         return getText(ctx);
+    }
+
+    static Object getOptionValue(Option_valueContext ctx) {
+        if(ctx == null) {
+            return true;
+        }
+        return getComplexValue(ctx.complex_value());
+    }
+    static Object getComplexValue(Complex_valueContext complex_value) {
+        if(complex_value == null) {
+            return true;
+        }
+        var value = getValueText(complex_value.value());
+        var array = getArray(complex_value.array());
+        var object = getObject(complex_value.object());
+        return first(value, array, object, true);
     }
 
     static String unquote(String text, String quote) {
