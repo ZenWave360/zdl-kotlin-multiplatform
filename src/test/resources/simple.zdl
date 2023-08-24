@@ -109,7 +109,7 @@ service CustomerService for (Customer) {
      * Create customer javadoc comment
      */
     @post("/customers")
-    @asyncapi({ api: "BASA", operationId: "createCustomer"})
+    @inbound({ api: "BASA", operationId: "createCustomer"})
     @query({api: "doxis", operationId: "createCustomer"})
     createCustomer(CustomerInput) Customer withEvents CustomerEvent [CustomerCreated|CustomerCreatedFailed]
 
@@ -133,7 +133,7 @@ event CustomerCreated (customerEvents) {
   customer Customer
 }
 
-@topic(tratra)
+@asyncapi({ api: 'BASA', operationId: 'createCustomer', topic: 'tratra' })
 event CustomerUpdated(customerEvents) {
   customerId String
   customer CustomerPayload {

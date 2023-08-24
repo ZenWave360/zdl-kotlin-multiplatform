@@ -12,8 +12,11 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 public class ZdlParser {
+
+    public static final Set<String> STANDARD_FIELD_TYPES = Set.of("String", "Integer", "Long", "BigDecimal", "Float", "Double", "Enum", "Boolean", "LocalDate", "ZonedDateTime", "Instant", "Duration", "UUID", "Blob", "AnyBlob", "ImageBlob", "TextBlob");
 
     public static Map<String, Object> parseModel(String model) throws IOException {
         CharStream zdl = CharStreams.fromString(model);
