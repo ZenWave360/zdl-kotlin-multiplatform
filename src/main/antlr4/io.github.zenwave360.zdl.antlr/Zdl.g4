@@ -48,6 +48,8 @@ ARRAY: '[]';
 // Keywords
 CONFIG: 'config';
 APIS: 'apis';
+PLUGINS: 'plugins';
+DISABLED: 'disabled';
 ASYNCAPI: 'asyncapi';
 OPENAPI: 'openapi';
 ENTITY: 'entity';
@@ -78,7 +80,7 @@ OPTION_NAME: '@' [a-zA-Z_][a-zA-Z0-9_]*;
 
 fragment DIGIT : [0-9] ;
 
-ID: [a-zA-Z_][a-zA-Z0-9_]*;
+ID: [a-zA-Z_][a-zA-Z0-9_.]*;
 INT: DIGIT+ ;
 NUMBER: DIGIT+ ([.] DIGIT+)? ;
 
@@ -126,7 +128,7 @@ object: LBRACE pair (COMMA pair)* RBRACE;
 array: LBRACK? value (COMMA value)* RBRACK?;
 
 config: CONFIG config_body;
-config_body: LBRACE config_option* RBRACE;
+config_body: LBRACE config_option* plugins? RBRACE;
 config_option: field_name complex_value;
 
 apis: APIS apis_body;
@@ -138,6 +140,16 @@ api_name: ID;
 api_body: LBRACE api_configs RBRACE;
 api_configs: (api_config)*;
 api_config: field_name complex_value;
+
+plugins: PLUGINS plugins_body;
+plugins_body: LBRACE plugin* RBRACE;
+plugin: javadoc? plugin_disabled plugin_name plugin_body;
+plugin_disabled: DISABLED?;
+plugin_name: ID;
+plugin_body: LBRACE plugin_configs RBRACE;
+plugin_configs: (plugin_config)*;
+plugin_config: plugin_cli_option | field_name complex_value;
+plugin_cli_option: '--' ID (EQUALS simple)?;
 
 // @options
 annotations: option*;
