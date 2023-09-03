@@ -44,6 +44,7 @@ FALSE: 'false';
 NULL: 'null';
 EQUALS: '=';
 ARRAY: '[]';
+OPTIONAL: '?';
 
 // Keywords
 CONFIG: 'config';
@@ -143,13 +144,16 @@ api_config: field_name complex_value;
 
 plugins: PLUGINS plugins_body;
 plugins_body: LBRACE plugin* RBRACE;
-plugin: javadoc? plugin_disabled plugin_name plugin_body;
+plugin: javadoc? plugin_disabled plugin_name plugin_options? plugin_body;
 plugin_disabled: DISABLED?;
-plugin_name: ID;
+plugin_name: ID | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING;
+plugin_options: LPAREN plugin_options_inherit RPAREN;
+plugin_options_inherit: 'inherit' (TRUE | FALSE);
 plugin_body: LBRACE plugin_configs RBRACE;
 plugin_configs: (plugin_config)*;
-plugin_config: plugin_cli_option | field_name complex_value;
-plugin_cli_option: '--' ID (EQUALS simple)?;
+plugin_config: plugin_config_cli_option | plugin_config_option;
+plugin_config_option: field_name complex_value;
+plugin_config_cli_option: '--' ID (EQUALS simple)?;
 
 // @options
 annotations: option*;
@@ -217,7 +221,7 @@ service_method: javadoc? annotations service_method_name LPAREN service_method_p
 service_method_name: ID;
 service_method_parameter_id: 'id';
 service_method_parameter: ID;
-service_method_return: ID | ID ARRAY;
+service_method_return: ID | ID ARRAY | ID OPTIONAL;
 service_method_with_events: WITH_EVENTS (service_method_events)*;
 service_method_events: service_method_event | service_method_events_or;
 service_method_event: ID;

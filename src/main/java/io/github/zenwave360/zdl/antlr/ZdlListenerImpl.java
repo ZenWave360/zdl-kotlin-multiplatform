@@ -141,8 +141,10 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 //        var name = ctx.reserved_option() != null? ctx.reserved_option().getText().replace("@", "") : getText(ctx.option_name());
         var name = ctx.option_name().getText().replace("@", "");
         var value = getOptionValue(ctx.option_value());
-        currentStack.peek().appendTo("options", name, value);
-        currentStack.peek().appendToList("optionsList", new FluentMap().with("name", name).with("value", value));
+        if(!currentStack.isEmpty()) {
+            currentStack.peek().appendTo("options", name, value);
+            currentStack.peek().appendToList("optionsList", new FluentMap().with("name", name).with("value", value));
+        }
         super.enterOption(ctx);
     }
 
@@ -293,7 +295,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     private Map<String, Object> relationshipOptions(List<io.github.zenwave360.zdl.antlr.ZdlParser.OptionContext> options) {
-        return options.stream().collect(Collectors.toMap(o -> getText(o.option_name()), o -> getText(o.option_value().complex_value(), true)));
+        return options.stream().collect(Collectors.toMap(o -> getText(o.option_name()), o -> getOptionValue(o.option_value())));
     }
 
     @Override
@@ -344,6 +346,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var methodParameter = ctx.service_method_parameter() != null? ctx.service_method_parameter().getText() : null;
         var returnType = ctx.service_method_return() != null? ctx.service_method_return().ID().getText() : null;
         var returnTypeIsArray = ctx.service_method_return() != null? ctx.service_method_return().ARRAY() != null : null;
+        var returnTypeIsOptional = ctx.service_method_return() != null? ctx.service_method_return().OPTIONAL() != null : null;
         var withEvents = getServiceMethodEvents(ctx.service_method_with_events());
         var javadoc = first(getText(ctx.javadoc(), getText(ctx.suffix_javadoc())));
 
@@ -353,6 +356,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
                 .with("parameter", methodParameter)
                 .with("returnType", returnType)
                 .with("returnTypeIsArray", returnTypeIsArray)
+                .with("returnTypeIsOptional", returnTypeIsOptional)
                 .with("withEvents", withEvents)
                 .with("javadoc", javadoc)
                 ;

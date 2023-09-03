@@ -176,11 +176,13 @@ class ZdlListenerUtils {
                 .with("paramId", "id")
                 .with("parameter", entity)
                 .with("returnType", entity)
+                .with("returnTypeIsOptional", true)
         );
         crudMethods.add(new FluentMap()
                 .with("name", "get" + entity)
                 .with("paramId", "id")
                 .with("returnType", entity)
+                .with("returnTypeIsOptional", true)
         );
         crudMethods.add(new FluentMap()
                 .with("name", "list" + pluralize(entity))
@@ -188,7 +190,7 @@ class ZdlListenerUtils {
                 .with("returnType", entity)
                 .with("returnTypeIsArray", true)
                 .with("options", new FluentMap()
-                        .with("paginated", true))
+                .with("paginated", true))
         );
         crudMethods.add(new FluentMap()
                 .with("name", "delete" + entity)
