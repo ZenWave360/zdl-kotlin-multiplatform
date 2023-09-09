@@ -64,9 +64,11 @@ MANY_TO_ONE: 'ManyToOne';
 ONE_TO_MANY: 'OneToMany';
 ONE_TO_ONE: 'OneToOne';
 SERVICE: 'service';
-WITH: 'with';
+PARAM_ID: 'id';
 FOR: 'for';
+TO: 'to';
 WITH_EVENTS: 'withEvents';
+WITH: 'with'; // legacy service
 
 // field validators
 REQUIRED: 'required';
@@ -76,11 +78,9 @@ MAX: 'max';
 MINLENGTH: 'minlength';
 MAXLENGTH: 'maxlength';
 PATTERN: 'pattern';
-
 OPTION_NAME: '@' [a-zA-Z_][a-zA-Z0-9_]*;
 
 fragment DIGIT : [0-9] ;
-
 ID: [a-zA-Z_][a-zA-Z0-9_.]*;
 INT: DIGIT+ ;
 NUMBER: DIGIT+ ([.] DIGIT+)? ;
@@ -121,10 +121,12 @@ suffix_javadoc: JAVADOC;
 legacy_constants: LEGACY_CONSTANT*;
 
 // values
+keyword: ID | CONFIG | APIS | PLUGINS | DISABLED | ASYNCAPI | OPENAPI | ENTITY | INPUT | OUTPUT | EVENT | RELATIONSHIP | SERVICE | PARAM_ID | FOR | TO | WITH_EVENTS | WITH | REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
+
 complex_value: value | array | object;
 value: simple | object;
-simple: ID | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL;
-pair: ID COLON value;
+simple: keyword | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL;
+pair: keyword COLON value;
 object: LBRACE pair (COMMA pair)* RBRACE;
 array: LBRACK? value (COMMA value)* RBRACK?;
 
@@ -153,7 +155,7 @@ plugin_body: LBRACE plugin_configs RBRACE;
 plugin_configs: (plugin_config)*;
 plugin_config: plugin_config_cli_option | plugin_config_option;
 plugin_config_option: field_name complex_value;
-plugin_config_cli_option: '--' ID (EQUALS simple)?;
+plugin_config_cli_option: '--' keyword (EQUALS simple)?;
 
 // @options
 annotations: option*;
@@ -164,14 +166,14 @@ option_value: complex_value;
 // entities
 entity: javadoc? annotations ENTITY entity_definition entity_body;
 entity_definition: entity_name entity_table_name?;
-entity_name: ID;
-entity_table_name: LPAREN ID RPAREN;
+entity_name: keyword;
+entity_table_name: LPAREN keyword RPAREN;
 entity_body: LBRACE fields RBRACE;
 
 fields: (field COMMA?)*;
 field: javadoc? annotations field_name field_type entity_table_name? (field_validations)* suffix_javadoc? (nested_field)?;
 nested_field: LBRACE (field)* RBRACE nested_field_validations*;
-field_name: ID;
+field_name: keyword;
 field_type: ID | ID ARRAY;
 //field_validations: REQUIRED | UNIQUE | min_validation | max_validation | minlength_validation | maxlength_validation | pattern_validation;
 field_validations: field_validation_name (LPAREN field_validation_value RPAREN)?;
@@ -198,19 +200,19 @@ output: javadoc? annotations OUTPUT output_name LBRACE fields RBRACE;
 output_name: ID;
 
 // events
-event: javadoc? annotations EVENT event_name (LPAREN event_channel RPAREN)? LBRACE fields RBRACE;
+event: javadoc? annotations EVENT event_name LBRACE fields RBRACE;
 event_name: ID;
-event_channel: ID;
+//event_channel: ID;
 
 // relationships
 relationships: RELATIONSHIP relationship_type  LBRACE relationship* RBRACE;
 relationship_type: MANY_TO_MANY | MANY_TO_ONE| ONE_TO_MANY | ONE_TO_ONE;
-relationship: relationship_from 'to' relationship_to;
+relationship: relationship_from TO relationship_to;
 relationship_from: javadoc? annotations relationship_definition;
 relationship_to: javadoc? annotations relationship_definition;
 relationship_definition: relationship_entity_name (LBRACE relationship_field_name relationship_description_field? RBRACE)?;
 relationship_entity_name: ID;
-relationship_field_name: ID;
+relationship_field_name: keyword;
 relationship_description_field: LPAREN ID RPAREN;
 
 
@@ -219,7 +221,7 @@ service: javadoc? annotations SERVICE ID FOR LPAREN service_aggregates RPAREN LB
 service_aggregates: ID (COMMA ID)*;
 service_method: javadoc? annotations service_method_name LPAREN service_method_parameter_id? COMMA? service_method_parameter? RPAREN service_method_return? service_method_with_events? suffix_javadoc?;
 service_method_name: ID;
-service_method_parameter_id: 'id';
+service_method_parameter_id: PARAM_ID;
 service_method_parameter: ID;
 service_method_return: ID | ID ARRAY | ID OPTIONAL;
 service_method_with_events: WITH_EVENTS (service_method_events)*;

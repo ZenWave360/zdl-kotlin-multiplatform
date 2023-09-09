@@ -100,7 +100,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var entity = ctx.entity_definition();
         var name = entity.entity_name().getText();
         var javadoc = getText(ctx.javadoc());
-        var tableName = entity.entity_table_name() != null? entity.entity_table_name().ID().getText() : null;
+        var tableName = getText(entity.entity_table_name());
         currentStack.push(processEntity(name, javadoc, tableName).with("type", "entity"));
         model.appendTo("entities", name, currentStack.peek());
         currentCollection = "entities";
@@ -201,7 +201,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var parentField = new ArrayList<>(parentEntityFields.values()).get(parentEntityFields.size() - 1);
         String entityName = parent.field_type().ID().getText();
         String entityJavadoc = getText(parent.javadoc());
-        String tableName = parent.entity_table_name() != null? parent.entity_table_name().ID().getText() : null;
+        String tableName = getText(parent.entity_table_name());
         var validations = processNestedFieldValidations(ctx.nested_field_validations());
         ((Map)parentField).put("validations", validations);
         currentStack.push(processEntity(entityName, entityJavadoc, tableName).with("type", currentCollection.split("\\.")[0]));
@@ -388,13 +388,11 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     @Override
     public void enterEvent(io.github.zenwave360.zdl.antlr.ZdlParser.EventContext ctx) {
         var name = ctx.event_name().getText();
-        var channel = getText(ctx.event_channel());
         var javadoc = getText(ctx.javadoc());
         var kebabCase = kebabCase(name);
         currentStack.push(new FluentMap()
                 .with("name", name)
                 .with("type", "events")
-                .with("channel", channel)
                 .with("kebabCase", kebabCase)
                 .with("javadoc", javadoc(javadoc))
                 .with("fields", new FluentMap())

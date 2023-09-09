@@ -38,8 +38,8 @@ class ZdlListenerUtils {
         if(ctx == null) {
             return null;
         }
-        if(ctx.ID() != null) {
-            return ctx.ID().getText();
+        if(ctx.keyword() != null) {
+            return ctx.keyword().getText();
         }
         if(ctx.SINGLE_QUOTED_STRING() != null) {
             return unquote(ctx.SINGLE_QUOTED_STRING().getText(), "'");
@@ -91,7 +91,7 @@ class ZdlListenerUtils {
             return null;
         }
         var map = new FluentMap();
-        ctx.pair().forEach(pair -> map.put(pair.ID().getText(), getValueText(pair.value()))); // TODO: consider nested objects
+        ctx.pair().forEach(pair -> map.put(pair.keyword().getText(), getValueText(pair.value()))); // TODO: consider nested objects
         return map;
     }
 
