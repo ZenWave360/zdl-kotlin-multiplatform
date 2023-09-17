@@ -137,10 +137,10 @@ class ZdlListenerUtils {
         if (javadoc == null) {
             return null;
         }
-        return javadoc.toString()
+        return getText((ParserRuleContext) javadoc)
                 .replaceAll("^/\\*\\*", "")
-                .replaceAll("\\*/$", "")
-                .replaceAll("^\\s+\\* ", "")
+                .replaceAll("\\*/\\s*$", "")
+                .replaceAll("^\\s*\\* ", "")
                 .trim();
     }
 

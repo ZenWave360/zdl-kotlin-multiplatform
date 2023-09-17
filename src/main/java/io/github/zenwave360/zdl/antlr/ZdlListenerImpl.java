@@ -50,8 +50,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void enterGlobal_javadoc(io.github.zenwave360.zdl.antlr.ZdlParser.Global_javadocContext ctx) {
-        var javadoc = getText(ctx);
-        model.put("javadoc", javadoc(javadoc));
+        model.put("javadoc", javadoc(ctx));
     }
 
     @Override
@@ -71,7 +70,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var name = ctx.api_name().getText();
         var type = ctx.api_type().getText();
         var role = ctx.api_role().getText();
-        var javadoc = getText(ctx.javadoc());
+        var javadoc = javadoc(ctx.javadoc());
         currentStack.push(new FluentMap()
                 .with("name", name)
                 .with("type", type)
@@ -96,10 +95,19 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
+    public void enterPolicie_body(ZdlParser.Policie_bodyContext ctx) {
+        var name = getText(ctx.policie_name());
+        var value = ctx.policie_value() != null? getValueText(ctx.policie_value().simple()) : null;
+        var aggregate = ((ZdlParser.PoliciesContext) ctx.getParent().getParent()).policy_aggregate();
+        model.appendTo("policies", new FluentMap().with(name, new FluentMap().with("name", name).with("value", value).with("aggregate", aggregate)));
+        super.enterPolicie_body(ctx);
+    }
+
+    @Override
     public void enterEntity(io.github.zenwave360.zdl.antlr.ZdlParser.EntityContext ctx) {
         var entity = ctx.entity_definition();
         var name = entity.entity_name().getText();
-        var javadoc = getText(ctx.javadoc());
+        var javadoc = javadoc(ctx.javadoc());
         var tableName = getText(entity.entity_table_name());
         currentStack.push(processEntity(name, javadoc, tableName).with("type", "entity"));
         model.appendTo("entities", name, currentStack.peek());
@@ -130,7 +138,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
                 .with("instanceNamePlural", pluralize(instanceName))
                 .with("kebabCase", kebabCase)
                 .with("kebabCasePlural", pluralize(kebabCase))
-                .with("javadoc", javadoc(javadoc))
+                .with("javadoc", javadoc)
                 .with("options", new FluentMap())
                 .with("fields", new FluentMap())
         ;
@@ -152,7 +160,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterField(io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext ctx) {
         var name = getText(ctx.field_name());
         var type = ctx.field_type() != null && ctx.field_type().ID() != null? ctx.field_type().ID().getText() : null;
-        var javadoc = first(getText(ctx.javadoc(), getText(ctx.suffix_javadoc())));
+        var javadoc = javadoc(first(ctx.javadoc(), ctx.suffix_javadoc()));
         var isEnum = false; // TODO
         var isEntity = false; // TODO
         var isArray = ctx.field_type().ARRAY() != null;
@@ -160,8 +168,8 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         currentStack.peek().appendTo("fields", name, new FluentMap()
                 .with("name", name)
                 .with("type", type)
-                .with("javadoc", javadoc(javadoc))
-                .with("comment", javadoc(javadoc))
+                .with("javadoc", javadoc)
+                .with("comment", javadoc)
                 .with("isEnum", isEnum)
                 .with("isEntity", isEntity)
                 .with("isArray", isArray)
@@ -182,6 +190,9 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
             field_validations.forEach(v -> {
                 var name = getText(v.field_validation_name());
                 var value = first(getText(v.field_validation_value()), "");
+                if("pattern".equals(name) && value != null) {
+                    value = value.substring(1, value.length() - 2);
+                }
                 validations.with(name, Map.of("name", name, "value", value));
             });
         }
@@ -200,7 +211,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var parentEntityFields = ((FluentMap) parentEntity.get("fields"));
         var parentField = new ArrayList<>(parentEntityFields.values()).get(parentEntityFields.size() - 1);
         String entityName = parent.field_type().ID().getText();
-        String entityJavadoc = getText(parent.javadoc());
+        String entityJavadoc = javadoc(parent.javadoc());
         String tableName = getText(parent.entity_table_name());
         var validations = processNestedFieldValidations(ctx.nested_field_validations());
         ((Map)parentField).put("validations", validations);
@@ -229,13 +240,13 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     @Override
     public void enterEnum(io.github.zenwave360.zdl.antlr.ZdlParser.EnumContext ctx) {
         var name = getText(ctx.enum_name());
-        var javadoc = getText(ctx.javadoc());
+        var javadoc = javadoc(ctx.javadoc());
         currentStack.push(new FluentMap()
                 .with("name", name)
                 .with("type", "enums")
                 .with("className", camelCase(name))
-                .with("javadoc", javadoc(javadoc))
-                .with("comment", javadoc(javadoc)));
+                .with("javadoc", javadoc)
+                .with("comment", javadoc));
         ((FluentMap) model.get("enums")).appendTo("enums", name, currentStack.peek());
 
         var entityLocation = "enums.enums." + name;
@@ -252,12 +263,12 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     @Override
     public void enterEnum_value(io.github.zenwave360.zdl.antlr.ZdlParser.Enum_valueContext ctx) {
         var name = getText(ctx.enum_value_name());
-        var javadoc = first(getText(ctx.javadoc(), getText(ctx.suffix_javadoc())));
+        var javadoc = javadoc(first(ctx.javadoc(), ctx.suffix_javadoc()));
         var value = ctx.enum_value_value() != null? getValueText(ctx.enum_value_value().simple()) : null;
         currentStack.peek().appendTo("values", name, new FluentMap()
                 .with("name", name)
-                .with("javadoc", javadoc(javadoc))
-                .with("comment", javadoc(javadoc))
+                .with("javadoc", javadoc)
+                .with("comment", javadoc)
                 .with("value", value)
         );
     }
@@ -269,20 +280,20 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
         var from = getText(ctx.relationship_from().relationship_definition().relationship_entity_name());
         var fromField = getText(ctx.relationship_from().relationship_definition().relationship_field_name());
-        var commentInFrom = getText(ctx.relationship_from().javadoc());
+        var commentInFrom = javadoc(ctx.relationship_from().javadoc());
         var fromOptions = relationshipOptions(ctx.relationship_from().annotations().option());
 
         var to = getText(ctx.relationship_to().relationship_definition().relationship_entity_name());
         var toField = getText(ctx.relationship_to().relationship_definition().relationship_field_name());
-        var commentInTo = getText(ctx.relationship_to().javadoc());
+        var commentInTo = javadoc(ctx.relationship_to().javadoc());
         var toOptions = relationshipOptions(ctx.relationship_to().annotations().option());
 
         var relationship = new FluentMap()
                 .with("type", relationshipType)
                 .with("from", from)
                 .with("to", to)
-                .with("commentInFrom", javadoc(commentInFrom))
-                .with("commentInTo", javadoc(commentInTo))
+                .with("commentInFrom", commentInFrom)
+                .with("commentInTo", commentInTo)
                 .appendTo("options", "source", fromOptions)
                 .appendTo("options", "destination", toOptions)
                 .with("injectedFieldInFrom", fromField) // FIXME review this
@@ -301,13 +312,13 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     @Override
     public void enterService_legacy(io.github.zenwave360.zdl.antlr.ZdlParser.Service_legacyContext ctx) {
         var serviceName = ctx.ID().getText();
-        String serviceJavadoc = null; // getText(ctx.javadoc());
+        String serviceJavadoc = "Legacy service";
         var serviceAggregates = ctx.service_aggregates() != null? Arrays.asList(ctx.service_aggregates().getText().split(",")) : null;
         currentStack.push(new FluentMap()
                 .with("name", serviceName)
                 .with("isLegacy", true)
                 .with("className", camelCase(serviceName))
-                .with("javadoc", javadoc(serviceJavadoc))
+                .with("javadoc", serviceJavadoc)
                 .with("aggregates", serviceAggregates)
                 .with("methods", createCRUDMethods(serviceAggregates))
         );
@@ -322,12 +333,12 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     @Override
     public void enterService(io.github.zenwave360.zdl.antlr.ZdlParser.ServiceContext ctx) {
         var serviceName = ctx.ID().getText();
-        var serviceJavadoc = getText(ctx.javadoc());
+        var serviceJavadoc = javadoc(ctx.javadoc());
         var serviceAggregates = ctx.service_aggregates() != null? Arrays.asList(ctx.service_aggregates().getText().split(",")) : null;
         currentStack.push(new FluentMap()
                 .with("name", serviceName)
                 .with("className", camelCase(serviceName))
-                .with("javadoc", javadoc(serviceJavadoc))
+                .with("javadoc", serviceJavadoc)
                 .with("aggregates", serviceAggregates)
                 .with("methods", new FluentMap())
         );
@@ -348,7 +359,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var returnTypeIsArray = ctx.service_method_return() != null? ctx.service_method_return().ARRAY() != null : null;
         var returnTypeIsOptional = ctx.service_method_return() != null? ctx.service_method_return().OPTIONAL() != null : null;
         var withEvents = getServiceMethodEvents(ctx.service_method_with_events());
-        var javadoc = first(getText(ctx.javadoc(), getText(ctx.suffix_javadoc())));
+        var javadoc = javadoc(first(ctx.javadoc(), ctx.suffix_javadoc()));
 
         var method = new FluentMap()
                 .with("name", methodName)
@@ -388,13 +399,13 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     @Override
     public void enterEvent(io.github.zenwave360.zdl.antlr.ZdlParser.EventContext ctx) {
         var name = ctx.event_name().getText();
-        var javadoc = getText(ctx.javadoc());
+        var javadoc = javadoc(ctx.javadoc());
         var kebabCase = kebabCase(name);
         currentStack.push(new FluentMap()
                 .with("name", name)
                 .with("type", "events")
                 .with("kebabCase", kebabCase)
-                .with("javadoc", javadoc(javadoc))
+                .with("javadoc", javadoc)
                 .with("fields", new FluentMap())
         );
         model.appendTo("events", name, currentStack.peek());
@@ -419,7 +430,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     @Override
     public void enterInput(io.github.zenwave360.zdl.antlr.ZdlParser.InputContext ctx) {
         var name = ctx.input_name().getText();
-        var javadoc = getText(ctx.javadoc());
+        var javadoc = javadoc(ctx.javadoc());
         currentStack.push(processEntity(name, javadoc, null).with("type", "inputs"));
         model.appendTo("inputs", name, currentStack.peek());
         currentCollection = "inputs";
@@ -433,7 +444,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     @Override
     public void enterOutput(io.github.zenwave360.zdl.antlr.ZdlParser.OutputContext ctx) {
         var name = ctx.output_name().getText();
-        var javadoc = getText(ctx.javadoc());
+        var javadoc = javadoc(ctx.javadoc());
         currentStack.push(processEntity(name, javadoc, null).with("type", "outputs"));
         model.appendTo("outputs", name, currentStack.peek());
         currentCollection = "outputs";

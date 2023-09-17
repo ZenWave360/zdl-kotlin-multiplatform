@@ -1,0 +1,11 @@
+
+policies {
+ somename_2 "this is the body of the policy 2"
+
+ some-3 "
+ this is the body of the policy 3
+ "
+
+ some-4
+ "this is the body of the policy 4"
+}

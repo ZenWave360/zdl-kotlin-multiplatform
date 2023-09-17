@@ -33,7 +33,7 @@ apis {
 entity Customer {
   username String required unique min(5)
   tags String[]
-  email String required unique max(MAX_LENGTH)
+  email String required unique max(MAX_LENGTH) pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/)
 }
 
 /**
@@ -62,7 +62,9 @@ entity CustomerEntityInput {
 //}
 
 relationship ManyToOne {
-  /** shipment details */
+  /**
+  * shipment details javadoc comment
+  */
   ShippingDetails{customer} to
   /** customer */
   Customer{shipmentDetails}
@@ -128,13 +130,13 @@ service CustomerService for (Customer) {
 }
 
 @topic(tratra)
-event CustomerCreated (customerEvents) {
+event CustomerCreated {
   customerId String
   customer Customer
 }
 
 @asyncapi({ api: 'BASA', operationId: 'createCustomer', topic: 'tratra' })
-event CustomerUpdated(customerEvents) {
+event CustomerUpdated {
   customerId String
   customer CustomerPayload {
     username String
@@ -150,6 +152,6 @@ event CustomerDeleted {
 
 
 @entity(Customer)
-event CustomerEvent(customerEvent) {
+event CustomerEvent {
 
 }

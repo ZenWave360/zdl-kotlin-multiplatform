@@ -29,6 +29,14 @@ public class ZdlListenerTest {
     }
 
     @Test
+    public void parseZdl_Policies() throws Exception {
+
+        ZdlModel model = parseZdl("src/test/resources/policies.zdl");
+
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+    }
+
+    @Test
     public void parseZdl_NestedFields() throws Exception {
 
         ZdlModel model = parseZdl("src/test/resources/nested-fields.zdl");

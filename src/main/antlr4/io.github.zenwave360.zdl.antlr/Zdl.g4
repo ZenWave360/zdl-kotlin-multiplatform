@@ -50,6 +50,7 @@ OPTIONAL: '?';
 CONFIG: 'config';
 APIS: 'apis';
 PLUGINS: 'plugins';
+POLICIES: 'policies';
 DISABLED: 'disabled';
 ASYNCAPI: 'asyncapi';
 OPENAPI: 'openapi';
@@ -82,6 +83,7 @@ OPTION_NAME: '@' [a-zA-Z_][a-zA-Z0-9_]*;
 
 fragment DIGIT : [0-9] ;
 ID: [a-zA-Z_][a-zA-Z0-9_.]*;
+POLICY_ID: [a-zA-Z_][a-zA-Z0-9_-]*;
 INT: DIGIT+ ;
 NUMBER: DIGIT+ ([.] DIGIT+)? ;
 
@@ -113,7 +115,7 @@ PATTERN_REGEX: '/' .*? '/' ; // TODO: improve regex
 ERRCHAR: . -> channel(HIDDEN);
 
 // Rules
-zdl: global_javadoc? legacy_constants config? apis? (entity | enum | input | output | event | relationships | service | service_legacy)* EOF;
+zdl: global_javadoc? legacy_constants config? apis? (policies | entity | enum | input | output | event | relationships | service | service_legacy)* EOF;
 global_javadoc: JAVADOC;
 javadoc: JAVADOC;
 suffix_javadoc: JAVADOC;
@@ -156,6 +158,13 @@ plugin_configs: (plugin_config)*;
 plugin_config: plugin_config_cli_option | plugin_config_option;
 plugin_config_option: field_name complex_value;
 plugin_config_cli_option: '--' keyword (EQUALS simple)?;
+
+policies: POLICIES (LPAREN policy_aggregate RPAREN)? policies_body;
+policy_aggregate: ID;
+policies_body: LBRACE policie_body* RBRACE;
+policie_body: policie_name policie_value;
+policie_name: ID | POLICY_ID;
+policie_value: simple;
 
 // @options
 annotations: option*;
