@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.camelCase;
@@ -277,32 +279,44 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterRelationship(io.github.zenwave360.zdl.antlr.ZdlParser.RelationshipContext ctx) {
         var parent = (io.github.zenwave360.zdl.antlr.ZdlParser.RelationshipsContext) ctx.parent;
         var relationshipType = parent.relationship_type().getText();
+        var relationshipName = removeJavadoc(relationshipType + "_" + ctx.relationship_from().getText() + "_" + ctx.relationship_to().getText());
 
-        var from = getText(ctx.relationship_from().relationship_definition().relationship_entity_name());
-        var fromField = getText(ctx.relationship_from().relationship_definition().relationship_field_name());
-        var commentInFrom = javadoc(ctx.relationship_from().javadoc());
-        var fromOptions = relationshipOptions(ctx.relationship_from().annotations().option());
+        var relationship = new FluentMap().with("type", relationshipType).with("name", relationshipName);
+        var location = "relationships." + relationshipName;
+        model.setLocation(location, getLocations(ctx));
 
-        var to = getText(ctx.relationship_to().relationship_definition().relationship_entity_name());
-        var toField = getText(ctx.relationship_to().relationship_definition().relationship_field_name());
-        var commentInTo = javadoc(ctx.relationship_to().javadoc());
-        var toOptions = relationshipOptions(ctx.relationship_to().annotations().option());
+        if(ctx.relationship_from() != null && ctx.relationship_from().relationship_definition() != null) {
+            var from = getText(ctx.relationship_from().relationship_definition().relationship_entity_name());
+            var fromField = getText(ctx.relationship_from().relationship_definition().relationship_field_name());
+            var commentInFrom = javadoc(ctx.relationship_from().javadoc());
+            var fromOptions = relationshipOptions(ctx.relationship_from().annotations().option());
+            model.setLocation(location + ".from.entity", getLocations(ctx.relationship_from().relationship_definition().relationship_entity_name()));
+            model.setLocation(location + ".from.field", getLocations(ctx.relationship_from().relationship_definition().relationship_field_name()));
+            relationship.with("from", from)
+                    .with("commentInFrom", commentInFrom)
+                    .with("injectedFieldInFrom", fromField) // FIXME review this
+                    .with("isInjectedFieldInFromRequired", false); // FIXME review this
+        }
 
-        var relationship = new FluentMap()
-                .with("type", relationshipType)
-                .with("from", from)
-                .with("to", to)
-                .with("commentInFrom", commentInFrom)
-                .with("commentInTo", commentInTo)
-                .appendTo("options", "source", fromOptions)
-                .appendTo("options", "destination", toOptions)
-                .with("injectedFieldInFrom", fromField) // FIXME review this
-                .with("injectedFieldInTo", toField) // FIXME review this
-                .with("isInjectedFieldInFromRequired", false) // FIXME review this
-                .with("isInjectedFieldInToRequired", false) // FIXME review this
-                ;
-        var relationshipName = relationshipType + "_" + ctx.relationship_from().getText() + "_" + ctx.relationship_to().getText();
+        if(ctx.relationship_to() != null && ctx.relationship_to().relationship_definition() != null) {
+            var to = getText(ctx.relationship_to().relationship_definition().relationship_entity_name());
+            var toField = getText(ctx.relationship_to().relationship_definition().relationship_field_name());
+            var commentInTo = javadoc(ctx.relationship_to().javadoc());
+            var toOptions = relationshipOptions(ctx.relationship_to().annotations().option());
+            model.setLocation(location + ".to.entity", getLocations(ctx.relationship_to().relationship_definition().relationship_entity_name()));
+            model.setLocation(location + ".to.field", getLocations(ctx.relationship_to().relationship_definition().relationship_field_name()));
+            relationship.with("to", to)
+                    .with("commentInTo", commentInTo)
+                    .with("injectedFieldInTo", toField) // FIXME review this
+                    .with("isInjectedFieldInToRequired", false); // FIXME review this
+        }
+
         model.getRelationships().appendTo(relationshipType, relationshipName, relationship);
+    }
+
+    private String removeJavadoc(String text) {
+        final String regex = "(/\\*\\*.+?\\*/)";
+        return text.replaceAll(regex, "");
     }
 
     private Map<String, Object> relationshipOptions(List<io.github.zenwave360.zdl.antlr.ZdlParser.OptionContext> options) {
@@ -332,7 +346,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void enterService(io.github.zenwave360.zdl.antlr.ZdlParser.ServiceContext ctx) {
-        var serviceName = ctx.ID().getText();
+        var serviceName = getText(ctx.service_name());
         var serviceJavadoc = javadoc(ctx.javadoc());
         var serviceAggregates = ctx.service_aggregates() != null? Arrays.asList(ctx.service_aggregates().getText().split(",")) : null;
         currentStack.push(new FluentMap()
@@ -343,6 +357,12 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
                 .with("methods", new FluentMap())
         );
         model.appendTo("services", serviceName, currentStack.peek());
+
+        var name =  currentStack.peek().get("name");
+        var location = "services." + name;
+        model.setLocation(location, getLocations(ctx));
+        model.setLocation(location + ".name", getLocations(ctx.service_name()));
+        model.setLocation(location + ".aggregates", getLocations(ctx.service_aggregates()));
     }
 
     @Override
@@ -352,13 +372,15 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void enterService_method(io.github.zenwave360.zdl.antlr.ZdlParser.Service_methodContext ctx) {
+        var serviceName = getText(((ZdlParser.ServiceContext) ctx.getParent()).service_name());
         var methodName = getText(ctx.service_method_name());
+        var location = "services." + serviceName + ".methods." + methodName;
         var methodParamId = ctx.service_method_parameter_id() != null? "id" : null;
         var methodParameter = ctx.service_method_parameter() != null? ctx.service_method_parameter().getText() : null;
         var returnType = ctx.service_method_return() != null? ctx.service_method_return().ID().getText() : null;
         var returnTypeIsArray = ctx.service_method_return() != null? ctx.service_method_return().ARRAY() != null : null;
         var returnTypeIsOptional = ctx.service_method_return() != null? ctx.service_method_return().OPTIONAL() != null : null;
-        var withEvents = getServiceMethodEvents(ctx.service_method_with_events());
+        var withEvents = getServiceMethodEvents(location, ctx.service_method_with_events());
         var javadoc = javadoc(first(ctx.javadoc(), ctx.suffix_javadoc()));
 
         var method = new FluentMap()
@@ -373,6 +395,11 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
                 ;
         currentStack.peek().appendTo("methods", methodName, method);
         currentStack.push(method);
+
+        model.setLocation(location, getLocations(ctx));
+        model.setLocation(location + ".name", getLocations(ctx.service_method_name()));
+        model.setLocation(location + ".parameter", getLocations(ctx.service_method_parameter()));
+        model.setLocation(location + ".returnType", getLocations(ctx.service_method_return()));
     }
 
     @Override
@@ -380,16 +407,22 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         currentStack.pop();
     }
 
-    private List<Object> getServiceMethodEvents(io.github.zenwave360.zdl.antlr.ZdlParser.Service_method_with_eventsContext ctx) {
+    private List<Object> getServiceMethodEvents(String location, io.github.zenwave360.zdl.antlr.ZdlParser.Service_method_with_eventsContext ctx) {
+        model.setLocation(location + ".withEvents", getLocations(ctx));
         var events = new ArrayList<>();
         if (ctx != null) {
             ctx.service_method_events().forEach(event -> {
                 if (event.service_method_event() != null) {
-                    events.add(getText(event.service_method_event()));
+                    var eventName = getText(event.service_method_event());
+                    events.add(eventName);
+                    model.setLocation(location + ".withEvents." + eventName, getLocations(event.service_method_event()));
                 }
                 if (event.service_method_events_or() != null) {
-                    var orEvents = event.service_method_events_or().ID().stream().map(ParseTree::getText).collect(Collectors.toList());
+                    var orEvents = event.service_method_events_or().service_method_event().stream().map(ParseTree::getText).collect(Collectors.toList());
                     events.add(orEvents);
+                    for (var eventContext: event.service_method_events_or().service_method_event()) {
+                        model.setLocation(location + ".withEvents." + getText(eventContext), getLocations(eventContext));
+                    }
                 }
             });
         }

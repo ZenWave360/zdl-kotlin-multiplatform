@@ -226,7 +226,8 @@ relationship_description_field: LPAREN ID RPAREN;
 
 
 // services
-service: javadoc? annotations SERVICE ID FOR LPAREN service_aggregates RPAREN LBRACE service_method* RBRACE;
+service: javadoc? annotations SERVICE service_name FOR LPAREN service_aggregates RPAREN LBRACE service_method* RBRACE;
+service_name: ID;
 service_aggregates: ID (COMMA ID)*;
 service_method: javadoc? annotations service_method_name LPAREN service_method_parameter_id? COMMA? service_method_parameter? RPAREN service_method_return? service_method_with_events? suffix_javadoc?;
 service_method_name: ID;
@@ -236,7 +237,7 @@ service_method_return: ID | ID ARRAY | ID OPTIONAL;
 service_method_with_events: WITH_EVENTS (service_method_events)*;
 service_method_events: service_method_event | service_method_events_or;
 service_method_event: ID;
-service_method_events_or: LPAREN ID (OR ID)* RPAREN | LBRACK ID (OR ID)* RBRACK;
+service_method_events_or: LPAREN service_method_event (OR service_method_event)* RPAREN | LBRACK service_method_event (OR service_method_event)* RBRACK;
 
 service_legacy: SERVICE service_aggregates WITH ID;
 

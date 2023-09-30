@@ -9,12 +9,18 @@ ZenWave Domain Model Language
 [![branches coverage](https://raw.githubusercontent.com/ZenWave360/zdl-jvm/badges/branches.svg)](https://github.com/ZenWave360/zdl-jvm/actions/workflows/build.yml)
 [![GitHub](https://img.shields.io/github/license/ZenWave360/zdl-jvm)](https://github.com/ZenWave360/zdl-jvm/blob/main/LICENSE)
 
-Work In Progress:
 
-- Domain Model Language for Event-Driven Architectures
-- ZDL is an extended subset of JHipster Domain Language (JDL) supporting JDL entities and relationships and adding support for Event-Driven Architectures concepts and EventStorming mapping.
+ZDL is a Domain Specific Language (DSL) for Event-Driven Architectures. With Domain Driven Design principles built-in, it can be used to map the discoveries of an [EventStorming](https://www.eventstorming.com/) session.
 
-Used in [ZenWave SDK](https://zenwave360.github.io/zenwave-sdk/) as drop-in replacement for [jdl-jvm](https://github.com/ZenWave360/jdl-jvm).
+- Designed to be developer friendly, with a simple and compact syntax.
+- It retains the language of the business process discoveries found in Event-Storming sessions.
+- And because it's machine-friendly it can be parsed and converted into multiple software artifacts like: 
+  - documentation, drawings, API definitions like OpenAPI and AsyncAPI v2/v3 and multiple backend implementations and its tests.
+
+Further reading:
+- [ZDL Domain Language Reference](https://zenwave360.github.io/docs/event-driven-design/zenwave-domain-language)
+- [ZenWave SDK](https://zenwave360.github.io/zenwave-sdk/)
+- [ZenWave Editor for IntelliJ](https://zenwave360.github.io/plugin/)
 
 ![EventStorming ZDL](docs/EvenStorming-ZDL.png)
 

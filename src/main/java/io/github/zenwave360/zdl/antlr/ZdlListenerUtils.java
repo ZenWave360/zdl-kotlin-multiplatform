@@ -152,7 +152,8 @@ class ZdlListenerUtils {
         if(ctx.start == ctx.stop) {
             stopCharOffset = ctx.getText().length();
         }
-        return new int[] { ctx.start.getLine(), ctx.start.getCharPositionInLine(), ctx.stop.getLine(), ctx.stop.getCharPositionInLine() + stopCharOffset };
+        // range in chars, range in lines and columns
+        return new int[] { ctx.start.getStartIndex(), ctx.start.getStopIndex() + 1, ctx.start.getLine(), ctx.start.getCharPositionInLine(), ctx.stop.getLine(), ctx.stop.getCharPositionInLine() + stopCharOffset };
     }
 
 

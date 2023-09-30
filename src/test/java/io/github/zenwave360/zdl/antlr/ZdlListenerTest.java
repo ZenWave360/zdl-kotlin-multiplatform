@@ -29,6 +29,14 @@ public class ZdlListenerTest {
     }
 
     @Test
+    public void parseZdl_Problems() throws Exception {
+
+        ZdlModel model = parseZdl("src/test/resources/customer-address-problems.zdl");
+
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model.get("problems")));
+    }
+
+    @Test
     public void parseZdl_Policies() throws Exception {
 
         ZdlModel model = parseZdl("src/test/resources/policies.zdl");

@@ -4,6 +4,9 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 
+import java.util.List;
+import java.util.Set;
+
 class JSONPath {
 
     private static final Configuration config = Configuration.defaultConfiguration();
@@ -14,6 +17,10 @@ class JSONPath {
         } catch (PathNotFoundException e) {
             return null;
         }
+    }
+
+    public static <T> List<T> getUnique(Object object, String jsonPath) {
+        return get(object, jsonPath, List.<T>of()).stream().filter(e -> e != null).distinct().toList();
     }
 
     public static <T> T get(Object object, String jsonPath, T defaultIfNull) {
