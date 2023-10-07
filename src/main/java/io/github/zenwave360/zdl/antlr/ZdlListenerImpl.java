@@ -97,10 +97,10 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterPolicie_body(ZdlParser.Policie_bodyContext ctx) {
+    public void enterPolicie_body(io.github.zenwave360.zdl.antlr.ZdlParser.Policie_bodyContext ctx) {
         var name = getText(ctx.policie_name());
         var value = ctx.policie_value() != null? getValueText(ctx.policie_value().simple()) : null;
-        var aggregate = ((ZdlParser.PoliciesContext) ctx.getParent().getParent()).policy_aggregate();
+        var aggregate = ((io.github.zenwave360.zdl.antlr.ZdlParser.PoliciesContext) ctx.getParent().getParent()).policy_aggregate();
         model.appendTo("policies", new FluentMap().with(name, new FluentMap().with("name", name).with("value", value).with("aggregate", aggregate)));
         super.enterPolicie_body(ctx);
     }
@@ -111,7 +111,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var name = entity.entity_name().getText();
         var javadoc = javadoc(ctx.javadoc());
         var tableName = getText(entity.entity_table_name());
-        currentStack.push(processEntity(name, javadoc, tableName).with("type", "entity"));
+        currentStack.push(processEntity(name, javadoc, tableName).with("type", "entities"));
         model.appendTo("entities", name, currentStack.peek());
         currentCollection = "entities";
 
@@ -372,7 +372,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void enterService_method(io.github.zenwave360.zdl.antlr.ZdlParser.Service_methodContext ctx) {
-        var serviceName = getText(((ZdlParser.ServiceContext) ctx.getParent()).service_name());
+        var serviceName = getText(((io.github.zenwave360.zdl.antlr.ZdlParser.ServiceContext) ctx.getParent()).service_name());
         var methodName = getText(ctx.service_method_name());
         var location = "services." + serviceName + ".methods." + methodName;
         var methodParamId = ctx.service_method_parameter_id() != null? "id" : null;
@@ -385,6 +385,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
         var method = new FluentMap()
                 .with("name", methodName)
+                .with("serviceName", serviceName)
                 .with("paramId", methodParamId)
                 .with("parameter", methodParameter)
                 .with("returnType", returnType)
