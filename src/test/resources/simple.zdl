@@ -14,10 +14,10 @@ config {
 apis {
 
   /** Customer API javadoc comment */
-  asyncapi(client) BASA {
-    uri 'classpath:/basa-asyncapi.yml'
-    consumerPackage 'com.basa.consumer'
-    modelPackage 'com.basa.model'
+  asyncapi(client) BRASA {
+    uri 'classpath:/BRASA-asyncapi.yml'
+    consumerPackage 'com.brasa.consumer'
+    modelPackage 'com.brasa.model'
   }
 }
 
@@ -111,7 +111,7 @@ service CustomerService for (Customer) {
      * Create customer javadoc comment
      */
     @post("/customers")
-    @inbound({ api: "BASA", operationId: "createCustomer"})
+    @inbound({ api: "BRASA", operationId: "createCustomer"})
     @query({api: "doxis", operationId: "createCustomer"})
     createCustomer(CustomerInput) Customer withEvents CustomerEvent [CustomerCreated|CustomerCreatedFailed]
 
@@ -135,7 +135,7 @@ event CustomerCreated {
   customer Customer
 }
 
-@asyncapi({ api: 'BASA', operationId: 'createCustomer', topic: 'tratra' })
+@asyncapi({ api: 'BRASA', operationId: 'createCustomer', topic: 'tratra' })
 event CustomerUpdated {
   customerId String
   customer CustomerPayload {

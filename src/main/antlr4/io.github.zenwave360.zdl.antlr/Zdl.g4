@@ -174,13 +174,13 @@ option_value: complex_value;
 
 // entities
 entity: javadoc? annotations ENTITY entity_definition entity_body;
-entity_definition: entity_name entity_table_name?;
+entity_definition: entity_name (LPAREN entity_table_name RPAREN)?;
 entity_name: keyword;
-entity_table_name: LPAREN keyword RPAREN;
+entity_table_name: keyword;
 entity_body: LBRACE fields RBRACE;
 
 fields: (field COMMA?)*;
-field: javadoc? annotations field_name field_type entity_table_name? (field_validations)* suffix_javadoc? (nested_field)?;
+field: javadoc? annotations field_name field_type (LPAREN entity_table_name RPAREN)? (field_validations)* suffix_javadoc? (nested_field)?;
 nested_field: LBRACE (field)* RBRACE nested_field_validations*;
 field_name: keyword;
 field_type: ID | ID ARRAY;

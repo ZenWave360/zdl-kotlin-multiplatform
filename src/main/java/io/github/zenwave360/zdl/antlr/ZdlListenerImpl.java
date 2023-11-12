@@ -69,9 +69,9 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void enterApi(io.github.zenwave360.zdl.antlr.ZdlParser.ApiContext ctx) {
-        var name = ctx.api_name().getText();
-        var type = ctx.api_type().getText();
-        var role = ctx.api_role().getText();
+        var name = getText(ctx.api_name());
+        var type = getText(ctx.api_type());
+        var role = getText(ctx.api_role(), "provider");
         var javadoc = javadoc(ctx.javadoc());
         currentStack.push(new FluentMap()
                 .with("name", name)
