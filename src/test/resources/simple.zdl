@@ -31,7 +31,7 @@ apis {
 @array([1, 2, 3])
 @array2(1, 2, 3)
 entity Customer {
-  username String required unique min(5)
+  @dbref username String required unique min(5)
   tags String[]
   email String required unique max(MAX_LENGTH) pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/)
 }
