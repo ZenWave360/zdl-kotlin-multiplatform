@@ -14,20 +14,29 @@ public class ZdlModelPostProcessor {
         var inputs = model.getInputs();
         var outputs = model.getOutputs();
         var enums = model.getEnums();
+        var events = model.getEvents();
 
         var fields = JSONPath.get(model, "$..fields[*]", List.<Map<String, Object>>of());
         for (var field : fields) {
-            if(entities != null && entities.containsKey(field.get("name"))) {
+            if(entities != null && entities.containsKey(field.get("type"))) {
                 field.put("isEntity", true);
+                field.put("isComplexType", true);
             }
-            if(enums != null && enums.containsKey(field.get("name"))) {
+            if(enums != null && enums.containsKey(field.get("type"))) {
                 field.put("isEnum", true);
+                field.put("isComplexType", true);
             }
-            if(inputs != null && inputs.containsKey(field.get("name"))) {
+            if(inputs != null && inputs.containsKey(field.get("type"))) {
                 field.put("isInput", true);
+                field.put("isComplexType", true);
             }
-            if(outputs != null && outputs.containsKey(field.get("name"))) {
+            if(outputs != null && outputs.containsKey(field.get("type"))) {
                 field.put("isOutput", true);
+                field.put("isComplexType", true);
+            }
+            if(events != null && events.containsKey(field.get("type"))) {
+                field.put("isEvent", true);
+                field.put("isComplexType", true);
             }
         }
 
