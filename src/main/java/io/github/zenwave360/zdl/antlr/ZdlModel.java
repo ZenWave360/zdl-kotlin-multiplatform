@@ -30,6 +30,11 @@ public class ZdlModel extends FluentMap {
         return (FluentMap) get("outputs");
     }
 
+    public FluentMap getEvents() {
+        return (FluentMap) get("events");
+    }
+
+
     public FluentMap getEnums() {
         var enumsRoot = (FluentMap) get("enums");
         if(enumsRoot != null) {
@@ -74,4 +79,5 @@ public class ZdlModel extends FluentMap {
     private int[] getLocation(String path) {
         return JSONPath.get(this, "$.locations.['" + path + "']");
     }
+
 }
