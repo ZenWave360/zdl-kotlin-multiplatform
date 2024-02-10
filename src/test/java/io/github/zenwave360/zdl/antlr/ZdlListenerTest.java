@@ -47,6 +47,10 @@ public class ZdlListenerTest {
         assertEquals("client", get(model, "$.apis.RestaurantsAsyncAPI.role"));
         assertEquals("restaurants/src/main/resources/apis/asyncapi.yml", get(model, "$.apis.RestaurantsAsyncAPI.config.uri"));
 
+        // PLUGINS
+        assertEquals(5, get(model, "$.plugins", Map.of()).size());
+        assertEquals(3, get(model, "$.plugins.ZDLToAsyncAPIPlugin.config", Map.of()).size());
+
         // ENTITIES
         assertEquals(5, get(model, "$.entities", Map.of()).size());
         assertEquals("CustomerOrder", get(model, "$.entities.CustomerOrder.name"));
@@ -126,19 +130,33 @@ public class ZdlListenerTest {
     }
 
     @Test
-    public void parseZdl_Simple() throws Exception {
+    public void parseZdl_Legacy() throws Exception {
 
-        ZdlModel model = parseZdl("src/test/resources/simple.zdl");
+        ZdlModel model = parseZdl("src/test/resources/legacy.jdl");
 
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+        assertEquals(1, get(model, "$.services", Map.of()).size());
+        assertEquals(List.of("Customer", "Address"), get(model, "$.services.CustomerService.aggregates"));
+        assertEquals(10, get(model, "$.services.CustomerService.methods", Map.of()).size());
     }
+
+
 
     @Test
     public void parseZdl_Problems() throws Exception {
 
-        ZdlModel model = parseZdl("src/test/resources/customer-address-problems.zdl");
+        ZdlModel model = parseZdl("src/test/resources/problems.zdl");
+        var problems = get(model, "$.problems", List.of());
+        assertEquals(13, problems.size());
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+    }
 
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model.get("problems")));
+    @Test
+    public void parseZdl_Problems_ExtraTypes() throws Exception {
+
+        ZdlModel model = parseZdl("src/test/resources/problems.zdl", List.of("OrderStatusX"));
+        var problems = get(model, "$.problems", List.of());
+        assertEquals(11, problems.size());
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
 
     @Test
@@ -176,7 +194,12 @@ public class ZdlListenerTest {
 
     private static ZdlModel parseZdl(String fileName) throws IOException {
         CharStream zdl = CharStreams.fromFileName(fileName);
-        return (ZdlModel) ZdlParser.parseModel(zdl.toString());
+        return new ZdlParser().parseModel(zdl.toString());
+    }
+
+    private static ZdlModel parseZdl(String fileName, List<String> extraTypes) throws IOException {
+        CharStream zdl = CharStreams.fromFileName(fileName);
+        return new ZdlParser().withExtraFieldTypes(extraTypes).parseModel(zdl.toString());
     }
 
 }

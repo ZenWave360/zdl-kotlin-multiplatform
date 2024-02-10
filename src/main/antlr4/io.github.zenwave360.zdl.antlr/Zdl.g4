@@ -239,7 +239,7 @@ service_method_return: ID | ID ARRAY | ID OPTIONAL;
 service_method_with_events: WITH_EVENTS (service_method_events)*;
 service_method_events: service_method_event | service_method_events_or;
 service_method_event: ID;
-service_method_events_or: LPAREN service_method_event (OR service_method_event)* RPAREN | LBRACK service_method_event (OR service_method_event)* RBRACK;
+service_method_events_or: LBRACK service_method_event (OR service_method_event)* RBRACK;
 
 service_legacy: SERVICE service_aggregates WITH ID;
 

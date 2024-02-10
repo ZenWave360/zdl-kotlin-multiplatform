@@ -64,7 +64,7 @@ apis {
     asyncapi(clientX) RestaurantsAsyncAPI {
         uri "restaurants/src/main/resources/apis/asyncapi.yml"
     }
-    asyncapi(clientX) DeliveryAsyncAPI {
+    asyncapi(client) DeliveryAsyncAPI {
         uri "delivery/src/main/resources/apis/asyncapi.yml"
     }
 }
@@ -193,7 +193,7 @@ service OrdersService for (CustomerOrderX) {
     @get("/{orderId}")
     getCustomerOrder(id) CustomerOrderInput?
     @post
-    createOrder(CustomerOrderInputX) CustomerOrder withEvents OrderEvent
+    createOrder(CustomerOrderInputX) CustomerOrder withEvents OrderEvent [OrderEvent|OrderEventFailedXX]
     @put("/{orderId}")
     updateOrder(id, CustomerOrderOutput) CustomerOrder withEvents OrderEventX OrderStatusUpdated
 

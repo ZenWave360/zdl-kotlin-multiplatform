@@ -1,0 +1,16 @@
+
+entity Customer {
+  customerId String required
+  firstName String required
+  lastName String required
+  email String required
+  phone String required
+}
+entity Address {
+  street String required
+  city String
+  state String
+  zip String
+}
+
+service Customer, Address with CustomerService

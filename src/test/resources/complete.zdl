@@ -141,6 +141,10 @@ relationship ManyToMany {
 
 // == Serices =============================
 
+@array_annotation(item1, item2, item3)
+@array2_annotation([item1, item2, item3])
+@object_annotation({item1: value, item2: value, item3: value})
+//TODO: support this -> @object_annotation({item1: value, item2: value, item3: [value1, value2]})
 input CustomerOrderInput {
     orderTime Instant
     status OrderStatus
@@ -193,7 +197,7 @@ service OrdersService for (CustomerOrder) {
     @get("/{orderId}")
     getCustomerOrder(id) CustomerOrder?
     @post
-    createOrder(CustomerOrderInput) CustomerOrder withEvents OrderEvent
+    createOrder(CustomerOrderInput) CustomerOrder withEvents [OrderEvent|OrderEventFailed]
     @put("/{orderId}")
     updateOrder(id, CustomerOrderInput) CustomerOrder withEvents OrderEvent OrderStatusUpdated
 
@@ -228,6 +232,15 @@ event OrderEvent {
    id String
    // + all fields from CustomerOrder (carried state transfer)
 }
+
+@copy(CustomerOrder)
+@asyncapi({channel: "OrdersChannel", topic: "orders.orders"})
+event OrderEventFailed {
+   id String
+   reason String
+   // + all fields from CustomerOrder (carried state transfer)
+}
+
 
 /** OrderStatusUpdated javadoc */
 @asyncapi({channel: "OrderUpdatesChannel", topic: "orders.order_updates"})

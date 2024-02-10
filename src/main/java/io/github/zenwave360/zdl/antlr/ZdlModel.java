@@ -54,6 +54,9 @@ public class ZdlModel extends FluentMap {
         return appendTo("locations", location, locations);
     }
 
+    public void clearProblems() {
+        remove("problems");
+    }
     public void addProblem(String path, String value, String error) {
         try {
             appendToList("problems", problem(path, value, error));
