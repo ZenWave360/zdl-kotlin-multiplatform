@@ -2,6 +2,7 @@ package io.github.zenwave360.zdl;
 
 import io.github.zenwave360.zdl.antlr.ZdlLexer;
 import io.github.zenwave360.zdl.antlr.ZdlListenerImpl;
+import io.github.zenwave360.zdl.antlr.ZdlModel;
 import io.github.zenwave360.zdl.antlr.ZdlModelPostProcessor;
 import io.github.zenwave360.zdl.antlr.ZdlModelValidator;
 import org.antlr.v4.runtime.CharStream;
@@ -19,7 +20,17 @@ public class ZdlParser {
 
     public static final List<String> STANDARD_FIELD_TYPES = List.of("String", "Integer", "Long", "BigDecimal", "Float", "Double", "Enum", "Boolean", "LocalDate", "ZonedDateTime", "Instant", "Duration", "UUID", "Blob", "AnyBlob", "ImageBlob", "TextBlob");
 
-    public static Map<String, Object> parseModel(String model) throws IOException {
+    private List<String> standardFieldTypes = STANDARD_FIELD_TYPES;
+    private List<String> extraFieldTypes = List.of();
+    public ZdlParser withStandardFieldTypes(List<String> standardFieldTypes) {
+        this.standardFieldTypes = standardFieldTypes;
+        return this;
+    }
+    public ZdlParser withExtraFieldTypes(List<String> extraFieldTypes) {
+        this.extraFieldTypes = extraFieldTypes;
+        return this;
+    }
+    public ZdlModel parseModel(String model) throws IOException {
         CharStream zdl = CharStreams.fromString(model);
         ZdlLexer lexer = new ZdlLexer(zdl);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -31,7 +42,10 @@ public class ZdlParser {
         var zdlModel = listener.getModel();
         zdlModel = ZdlModelPostProcessor.postProcess(zdlModel);
         try {
-            zdlModel = ZdlModelValidator.validate(zdlModel);
+            zdlModel = new ZdlModelValidator()
+                    .withStandardFieldTypes(standardFieldTypes)
+                    .withExtraFieldTypes(extraFieldTypes)
+                    .validate(zdlModel);
         } catch (Exception e) {
             e.printStackTrace();
         }

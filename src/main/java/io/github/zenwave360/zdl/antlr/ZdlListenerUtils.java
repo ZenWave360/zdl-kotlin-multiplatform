@@ -166,11 +166,15 @@ class ZdlListenerUtils {
     }
 
     static List<Map> createCRUDMethods(String entity) {
+        var path = "/" + inflector.kebabCase(inflector.pluralize(entity.toLowerCase()));
+        var entityIdPath = path + "/{"+ inflector.lowerCamelCase(entity) + "Id}";
         var crudMethods = new ArrayList<Map>();
         crudMethods.add(new FluentMap()
                 .with("name", "create" + entity)
                 .with("parameter", entity)
                 .with("returnType", entity)
+                .with("options", new FluentMap().with("post", path))
+                .with("optionsList", List.of(Map.of("name", "post", "value", path)))
         );
         crudMethods.add(new FluentMap()
                 .with("name", "update" + entity)
@@ -178,12 +182,16 @@ class ZdlListenerUtils {
                 .with("parameter", entity)
                 .with("returnType", entity)
                 .with("returnTypeIsOptional", true)
+                .with("options", new FluentMap().with("put", entityIdPath))
+                .with("optionsList", List.of(Map.of("name", "put", "value", entityIdPath)))
         );
         crudMethods.add(new FluentMap()
                 .with("name", "get" + entity)
                 .with("paramId", "id")
                 .with("returnType", entity)
                 .with("returnTypeIsOptional", true)
+                .with("options", new FluentMap().with("get", entityIdPath))
+                .with("optionsList", List.of(Map.of("name", "get", "value", entityIdPath)))
         );
         crudMethods.add(new FluentMap()
                 .with("name", "list" + pluralize(entity))
@@ -192,10 +200,14 @@ class ZdlListenerUtils {
                 .with("returnTypeIsArray", true)
                 .with("options", new FluentMap()
                 .with("paginated", true))
+                .with("options", new FluentMap().with("get", path))
+                .with("optionsList", List.of(Map.of("name", "get", "value", path)))
         );
         crudMethods.add(new FluentMap()
                 .with("name", "delete" + entity)
                 .with("paramId", "id")
+                .with("options", new FluentMap().with("delete", entityIdPath))
+                .with("optionsList", List.of(Map.of("name", "delete", "value", entityIdPath)))
         );
         return crudMethods;
     }

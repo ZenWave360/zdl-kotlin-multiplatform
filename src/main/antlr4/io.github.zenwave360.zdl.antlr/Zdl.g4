@@ -180,10 +180,12 @@ entity_table_name: keyword;
 entity_body: LBRACE fields RBRACE;
 
 fields: (field COMMA?)*;
-field: javadoc? annotations field_name field_type (LPAREN entity_table_name RPAREN)? (field_validations)* suffix_javadoc? (nested_field)?;
+field: javadoc? annotations field_name field_type field_initialization? (LPAREN entity_table_name RPAREN)? (field_validations)* suffix_javadoc? (nested_field)?;
 nested_field: LBRACE (field)* RBRACE nested_field_validations*;
 field_name: keyword;
 field_type: ID | ID ARRAY;
+field_initialization: EQUALS field_initial_value;
+field_initial_value: simple;
 //field_validations: REQUIRED | UNIQUE | min_validation | max_validation | minlength_validation | maxlength_validation | pattern_validation;
 field_validations: field_validation_name (LPAREN field_validation_value RPAREN)?;
 field_validation_name: REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
@@ -237,7 +239,7 @@ service_method_return: ID | ID ARRAY | ID OPTIONAL;
 service_method_with_events: WITH_EVENTS (service_method_events)*;
 service_method_events: service_method_event | service_method_events_or;
 service_method_event: ID;
-service_method_events_or: LPAREN service_method_event (OR service_method_event)* RPAREN | LBRACK service_method_event (OR service_method_event)* RBRACK;
+service_method_events_or: LBRACK service_method_event (OR service_method_event)* RBRACK;
 
 service_legacy: SERVICE service_aggregates WITH ID;
 

@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -82,6 +83,14 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
                 .with("config", new FluentMap())
         );
         model.appendTo("apis", name, currentStack.peek());
+
+        var apiLocation = "apis." + name;
+        model.setLocation(apiLocation, getLocations(ctx));
+        model.setLocation(apiLocation + ".name", getLocations(ctx.api_name()));
+        model.setLocation(apiLocation + ".type", getLocations(ctx.api_type()));
+        if(ctx.api_role() != null) {
+            model.setLocation(apiLocation + ".role", getLocations(ctx.api_role()));
+        }
     }
 
     @Override
@@ -93,6 +102,54 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void exitApi(io.github.zenwave360.zdl.antlr.ZdlParser.ApiContext ctx) {
+        currentStack.pop();
+    }
+
+    @Override
+    public void enterPlugin(ZdlParser.PluginContext ctx) {
+        var name = getText(ctx.plugin_name());
+        var javadoc = javadoc(ctx.javadoc());
+        var disabled = ctx.plugin_disabled().DISABLED() != null;
+        var inherit = ctx.plugin_options() != null? getText(ctx.plugin_options().plugin_options_inherit()) : true;
+        currentStack.push(new FluentMap()
+                .with("name", name)
+                .with("javadoc", javadoc)
+                .with("disabled", disabled)
+                .with("options", new FluentMap().with("inherit", inherit))
+        );
+        model.appendTo("plugins", name, currentStack.peek());
+
+        var location = "plugins." + name;
+        model.setLocation(location, getLocations(ctx));
+        model.setLocation(location + ".name", getLocations(ctx.plugin_name()));
+        model.setLocation(location + ".javadoc", getLocations(ctx.javadoc()));
+        if(ctx.plugin_disabled().DISABLED() != null) {
+            model.setLocation(location + ".disabled", getLocations(ctx.plugin_disabled()));
+        }
+        if(ctx.plugin_options() != null) {
+            model.setLocation(location + ".options", getLocations(ctx.plugin_options()));
+            if(ctx.plugin_options().plugin_options_inherit() != null) {
+                model.setLocation(location + ".options.inherit", getLocations(ctx.plugin_options().plugin_options_inherit()));
+            }
+        }
+    }
+
+    @Override
+    public void enterPlugin_config_option(ZdlParser.Plugin_config_optionContext ctx) {
+        var name = getText(ctx.field_name());
+        var value = getComplexValue(ctx.complex_value());
+        currentStack.peek().appendTo("config", name, value);
+    }
+
+    @Override
+    public void enterPlugin_config_cli_option(ZdlParser.Plugin_config_cli_optionContext ctx) {
+        var keyword = getText(ctx.keyword());
+        var value = getText(ctx.simple());
+        currentStack.peek().appendTo("cliOptions", keyword, value);
+    }
+
+    @Override
+    public void exitPlugin(ZdlParser.PluginContext ctx) {
         currentStack.pop();
     }
 
@@ -162,6 +219,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterField(io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext ctx) {
         var name = getText(ctx.field_name());
         var type = ctx.field_type() != null && ctx.field_type().ID() != null? ctx.field_type().ID().getText() : null;
+        var initialValue = ctx.field_initialization() != null && ctx.field_initialization().field_initial_value() != null? getValueText(ctx.field_initialization().field_initial_value().simple()) : null;
         var javadoc = javadoc(first(ctx.javadoc(), ctx.suffix_javadoc()));
         var isEnum = false; // see ZdlModelPostProcessor
         var isEntity = false; // see ZdlModelPostProcessor
@@ -170,6 +228,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var field = new FluentMap()
                 .with("name", name)
                 .with("type", type)
+                .with("initialValue", initialValue)
                 .with("javadoc", javadoc)
                 .with("comment", javadoc)
                 .with("isEnum", isEnum)
@@ -253,9 +312,9 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
                 .with("className", camelCase(name))
                 .with("javadoc", javadoc)
                 .with("comment", javadoc));
-        ((FluentMap) model.get("enums")).appendTo("enums", name, currentStack.peek());
+        model.appendTo("enums", name, currentStack.peek());
 
-        var entityLocation = "enums.enums." + name;
+        var entityLocation = "enums." + name;
         model.setLocation(entityLocation, getLocations(ctx));
         model.setLocation(entityLocation + ".name", getLocations(ctx.enum_name()));
         model.setLocation(entityLocation + ".body", getLocations(ctx.enum_body()));
@@ -298,7 +357,8 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
             model.setLocation(location + ".from.field", getLocations(ctx.relationship_from().relationship_definition().relationship_field_name()));
             relationship.with("from", from)
                     .with("commentInFrom", commentInFrom)
-                    .with("injectedFieldInFrom", fromField) // FIXME review this
+                    .with("injectedFieldInFrom", fromField)
+                    .with("fromOptions", fromOptions)
                     .with("isInjectedFieldInFromRequired", false); // FIXME review this
         }
 
@@ -311,7 +371,8 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
             model.setLocation(location + ".to.field", getLocations(ctx.relationship_to().relationship_definition().relationship_field_name()));
             relationship.with("to", to)
                     .with("commentInTo", commentInTo)
-                    .with("injectedFieldInTo", toField) // FIXME review this
+                    .with("injectedFieldInTo", toField)
+                    .with("toOptions", toOptions)
                     .with("isInjectedFieldInToRequired", false); // FIXME review this
         }
 
@@ -320,11 +381,15 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     private String removeJavadoc(String text) {
         final String regex = "(/\\*\\*.+?\\*/)";
+        text = text.replace("\r\n", "");
+        text = text.replace("\n", "");
         return text.replaceAll(regex, "");
     }
 
     private Map<String, Object> relationshipOptions(List<io.github.zenwave360.zdl.antlr.ZdlParser.OptionContext> options) {
-        return options.stream().collect(Collectors.toMap(o -> getText(o.option_name()), o -> getOptionValue(o.option_value())));
+        return options.stream().collect(Collectors.toMap(o ->
+                getText(o.option_name()).replace("@", ""),
+                o -> getOptionValue(o.option_value())));
     }
 
     @Override
@@ -338,6 +403,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
                 .with("className", camelCase(serviceName))
                 .with("javadoc", serviceJavadoc)
                 .with("aggregates", serviceAggregates)
+                .with("options", Map.of("rest", true))
                 .with("methods", createCRUDMethods(serviceAggregates))
         );
         model.appendTo("services", serviceName, currentStack.peek());
@@ -416,19 +482,25 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         model.setLocation(location + ".withEvents", getLocations(ctx));
         var events = new ArrayList<>();
         if (ctx != null) {
+            AtomicInteger i = new AtomicInteger(0);
             ctx.service_method_events().forEach(event -> {
                 if (event.service_method_event() != null) {
                     var eventName = getText(event.service_method_event());
                     events.add(eventName);
+                    model.setLocation(location + ".withEvents." + i.get(), getLocations(event.service_method_event()));
                     model.setLocation(location + ".withEvents." + eventName, getLocations(event.service_method_event()));
                 }
                 if (event.service_method_events_or() != null) {
                     var orEvents = event.service_method_events_or().service_method_event().stream().map(ParseTree::getText).collect(Collectors.toList());
                     events.add(orEvents);
+                    int j = 0;
                     for (var eventContext: event.service_method_events_or().service_method_event()) {
+                        model.setLocation(location + ".withEvents." + i.get() + "." + j, getLocations(eventContext));
                         model.setLocation(location + ".withEvents." + getText(eventContext), getLocations(eventContext));
+                        j++;
                     }
                 }
+                i.incrementAndGet();
             });
         }
         return events;
