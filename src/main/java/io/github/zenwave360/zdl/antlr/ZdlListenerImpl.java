@@ -346,7 +346,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterRelationship(io.github.zenwave360.zdl.antlr.ZdlParser.RelationshipContext ctx) {
         var parent = (io.github.zenwave360.zdl.antlr.ZdlParser.RelationshipsContext) ctx.parent;
         var relationshipType = parent.relationship_type().getText();
-        var relationshipName = removeJavadoc(relationshipType + "_" + ctx.relationship_from().getText() + "_" + ctx.relationship_to().getText());
+        var relationshipName = removeJavadoc(relationshipType + "_" + relationshipDescription(ctx.relationship_from().relationship_definition()) + "_" + relationshipDescription(ctx.relationship_to().relationship_definition()));
 
         var relationship = new FluentMap().with("type", relationshipType).with("name", relationshipName);
         var location = "relationships." + relationshipName;
@@ -357,13 +357,16 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
             var fromField = getText(ctx.relationship_from().relationship_definition().relationship_field_name());
             var commentInFrom = javadoc(ctx.relationship_from().javadoc());
             var fromOptions = relationshipOptions(ctx.relationship_from().annotations().option());
+            var isInjectedFieldInFromRequired = ctx.relationship_from().relationship_definition().relationship_field_required() != null;
+            var injectedFieldInFromDescription = getText(ctx.relationship_from().relationship_definition().relationship_description_field());
             model.setLocation(location + ".from.entity", getLocations(ctx.relationship_from().relationship_definition().relationship_entity_name()));
             model.setLocation(location + ".from.field", getLocations(ctx.relationship_from().relationship_definition().relationship_field_name()));
             relationship.with("from", from)
                     .with("commentInFrom", commentInFrom)
                     .with("injectedFieldInFrom", fromField)
                     .with("fromOptions", fromOptions)
-                    .with("isInjectedFieldInFromRequired", false); // FIXME review this
+                    .with("injectedFieldInFromDescription", injectedFieldInFromDescription)
+                    .with("isInjectedFieldInFromRequired", isInjectedFieldInFromRequired);
         }
 
         if(ctx.relationship_to() != null && ctx.relationship_to().relationship_definition() != null) {
@@ -371,13 +374,16 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
             var toField = getText(ctx.relationship_to().relationship_definition().relationship_field_name());
             var commentInTo = javadoc(ctx.relationship_to().javadoc());
             var toOptions = relationshipOptions(ctx.relationship_to().annotations().option());
+            var isInjectedFieldInToRequired = ctx.relationship_to().relationship_definition().relationship_field_required() != null;
+            var injectedFieldInToDescription = getText(ctx.relationship_to().relationship_definition().relationship_description_field());
             model.setLocation(location + ".to.entity", getLocations(ctx.relationship_to().relationship_definition().relationship_entity_name()));
             model.setLocation(location + ".to.field", getLocations(ctx.relationship_to().relationship_definition().relationship_field_name()));
             relationship.with("to", to)
                     .with("commentInTo", commentInTo)
                     .with("injectedFieldInTo", toField)
                     .with("toOptions", toOptions)
-                    .with("isInjectedFieldInToRequired", false); // FIXME review this
+                    .with("injectedFieldInToDescription", injectedFieldInToDescription)
+                    .with("isInjectedFieldInToRequired", isInjectedFieldInToRequired);
         }
 
         model.getRelationships().appendTo(relationshipType, relationshipName, relationship);
@@ -388,6 +394,17 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         text = text.replace("\r\n", "");
         text = text.replace("\n", "");
         return text.replaceAll(regex, "");
+    }
+
+    private String relationshipDescription(ZdlParser.Relationship_definitionContext ctx) {
+        var description = "";
+        if(ctx != null) {
+            description = description + getText(ctx.relationship_entity_name());
+            if (ctx.relationship_field_name() != null) {
+                description = description + "{" + getText(ctx.relationship_field_name()) + "}";
+            }
+        }
+        return description;
     }
 
     private Map<String, Object> relationshipOptions(List<io.github.zenwave360.zdl.antlr.ZdlParser.OptionContext> options) {

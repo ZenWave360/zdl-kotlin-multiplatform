@@ -104,10 +104,14 @@ public class ZdlListenerTest {
         assertEquals("customer", get(model, "$.relationships.ManyToOne.ManyToOne_Address{customer}_Customer.injectedFieldInFrom"));
         assertNull(get(model, "$.relationships.ManyToOne.ManyToOne_Address{customer}_Customer.injectedFieldInTo"));
 
+        assertEquals(true, get(model, "$.relationships.ManyToOne.ManyToOne_Address{customer2}_Customer.isInjectedFieldInFromRequired"));
+        assertEquals(false, get(model, "$.relationships.ManyToOne.ManyToOne_Address{customer2}_Customer.isInjectedFieldInToRequired"));
+
+        assertEquals("lastname", get(model, "$.relationships.OneToMany.OneToMany_Customer{addresses}_Address{customer}.injectedFieldInFromDescription"));
         assertEquals("Address.customer javadoc", get(model, "$.relationships.OneToMany.OneToMany_Customer{addresses}_Address{customer}.commentInTo"));
 
-        assertEquals("Customer", get(model, "$.relationships.OneToOne.OneToOne_Customer{address}_@IdAddress{customer}.from"));
-        assertEquals(true, get(model, "$.relationships.OneToOne.OneToOne_Customer{address}_@IdAddress{customer}.toOptions.Id"));
+        assertEquals("Customer", get(model, "$.relationships.OneToOne.OneToOne_Customer{address}_Address{customer}.from"));
+        assertEquals(true, get(model, "$.relationships.OneToOne.OneToOne_Customer{address}_Address{customer}.toOptions.Id"));
 
 
         // SERVICES

@@ -131,11 +131,11 @@ relationship ManyToOne {
     Address{customer} to Customer
 }
 relationship ManyToOne {
-    Address{customer2} to Customer
-    Address{customer3} to Customer
+    Address{customer2 required} to Customer
+    Address{customer3(lastname) required} to Customer
 }
 relationship OneToMany {
-    Customer{addresses} to /** Address.customer javadoc */ Address{customer}
+    Customer{addresses(lastname)} to /** Address.customer javadoc */ Address{customer}
 }
 relationship OneToOne {
     Customer{address} to @Id Address{customer}

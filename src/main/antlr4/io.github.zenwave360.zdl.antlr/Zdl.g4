@@ -221,10 +221,10 @@ relationship_type: MANY_TO_MANY | MANY_TO_ONE| ONE_TO_MANY | ONE_TO_ONE;
 relationship: relationship_from TO relationship_to;
 relationship_from: javadoc? annotations relationship_definition;
 relationship_to: javadoc? annotations relationship_definition;
-relationship_definition: relationship_entity_name (LBRACE relationship_field_name relationship_description_field? relationship_field_required? RBRACE)?;
+relationship_definition: relationship_entity_name (LBRACE relationship_field_name (LPAREN relationship_description_field RPAREN)? relationship_field_required? RBRACE)?;
 relationship_entity_name: ID;
 relationship_field_name: keyword;
-relationship_description_field: LPAREN ID RPAREN;
+relationship_description_field: ID;
 relationship_field_required: REQUIRED;
 
 
