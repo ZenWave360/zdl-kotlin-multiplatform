@@ -82,6 +82,7 @@ entity CustomerOrder {
       lastName String required
       email String required
       phone String required
+      avatar byte[]
       address Address {
         street String required
         city String
@@ -110,6 +111,10 @@ entity CustomerOrder {
        price BigDecimal required
        quantity Integer required
     }
+}
+
+@aggregate
+entity Aggregate2 {
 }
 
 enum OrderStatus {
@@ -212,6 +217,10 @@ service OrdersService for (CustomerOrder) {
 
     @post({path: "/search", params: {param1: String, param2: Integer}})
     searchOrders(OrdersFilter) CustomerOrder[]
+}
+
+service OrdersService2 for (CustomerOrder, Aggregate2) {
+
 }
 
 /** CustomerOrderOutput javadoc */

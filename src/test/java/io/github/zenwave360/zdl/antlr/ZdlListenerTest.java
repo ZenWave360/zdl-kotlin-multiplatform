@@ -52,7 +52,7 @@ public class ZdlListenerTest {
         assertEquals(3, get(model, "$.plugins.ZDLToAsyncAPIPlugin.config", Map.of()).size());
 
         // ENTITIES
-        assertEquals(5, get(model, "$.entities", Map.of()).size());
+        assertEquals(6, get(model, "$.entities", Map.of()).size());
         assertEquals("CustomerOrder", get(model, "$.entities.CustomerOrder.name"));
         assertEquals("customer_order", get(model, "$.entities.CustomerOrder.tableName"));
         assertEquals("customer-orders", get(model, "$.entities.CustomerOrder.kebabCasePlural"));
@@ -111,8 +111,9 @@ public class ZdlListenerTest {
 
 
         // SERVICES
-        assertEquals(1, get(model, "$.services", Map.of()).size());
+        assertEquals(2, get(model, "$.services", Map.of()).size());
         assertEquals(List.of("CustomerOrder"), get(model, "$.services.OrdersService.aggregates"));
+        assertEquals(List.of("CustomerOrder", "Aggregate2"), get(model, "$.services.OrdersService2.aggregates"));
         assertEquals(7, get(model, "$.services.OrdersService.methods", Map.of()).size());
 
         assertEquals(List.of("OrderEvent", "OrderStatusUpdated"), get(model, "$.services.OrdersService.methods.updateKitchenStatus.withEvents"));

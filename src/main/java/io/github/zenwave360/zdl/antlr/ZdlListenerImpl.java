@@ -225,6 +225,10 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var isEntity = false; // see ZdlModelPostProcessor
         var isArray = ctx.field_type().ARRAY() != null;
         var validations = processFieldValidations(ctx.field_validations());
+        if("byte".equals(type) && isArray) {
+            type = "byte[]";
+            isArray = false;
+        }
         var field = new FluentMap()
                 .with("name", name)
                 .with("type", type)
@@ -396,7 +400,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterService_legacy(io.github.zenwave360.zdl.antlr.ZdlParser.Service_legacyContext ctx) {
         var serviceName = ctx.ID().getText();
         String serviceJavadoc = "Legacy service";
-        var serviceAggregates = ctx.service_aggregates() != null? Arrays.asList(ctx.service_aggregates().getText().split(",")) : null;
+        var serviceAggregates = getArray(ctx.service_aggregates(), ",");
         currentStack.push(new FluentMap()
                 .with("name", serviceName)
                 .with("isLegacy", true)
@@ -418,7 +422,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterService(io.github.zenwave360.zdl.antlr.ZdlParser.ServiceContext ctx) {
         var serviceName = getText(ctx.service_name());
         var serviceJavadoc = javadoc(ctx.javadoc());
-        var serviceAggregates = ctx.service_aggregates() != null? Arrays.asList(ctx.service_aggregates().getText().split(",")) : null;
+        var serviceAggregates = getArray(ctx.service_aggregates(), ",");
         currentStack.push(new FluentMap()
                 .with("name", serviceName)
                 .with("className", camelCase(serviceName))

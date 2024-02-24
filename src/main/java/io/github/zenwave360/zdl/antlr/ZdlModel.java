@@ -1,6 +1,7 @@
 package io.github.zenwave360.zdl.antlr;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class ZdlModel extends FluentMap {
@@ -47,6 +48,10 @@ public class ZdlModel extends FluentMap {
         return (FluentMap) get("locations");
     }
 
+    public List getProblems() {
+        return (List) get("problems");
+    }
+
     public FluentMap setLocation(String location, int[] locations) {
         if(locations == null || locations.length != 6) {
             return this;
@@ -55,7 +60,9 @@ public class ZdlModel extends FluentMap {
     }
 
     public void clearProblems() {
-        remove("problems");
+        if(getProblems() != null) {
+            getProblems().clear();
+        }
     }
     public void addProblem(String path, String value, String error) {
         try {

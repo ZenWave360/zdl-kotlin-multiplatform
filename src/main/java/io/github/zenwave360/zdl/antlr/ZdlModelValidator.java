@@ -86,22 +86,22 @@ public class ZdlModelValidator {
 
     private void validateField(ZdlModel model, String entityType, String entityName, String fieldName, String fieldType) {
         if("entities".equals(entityType)) {
-            if(!(isEntityOrEnum(model, fieldType) || isStandardFieldType(fieldType))) {
+            if(!(isStandardFieldType(fieldType) || isEntityOrEnum(model, fieldType))) {
                 model.addProblem(path("entities", entityName, "fields", fieldName, "type"), fieldType, "%s is not a valid type");
             }
         }
         else if ("inputs".equals(entityType)) {
-            if(!(isEntityOrEnum(model, fieldType) || isStandardFieldType(fieldType) || isInput(model, fieldType))) {
+            if(!(isStandardFieldType(fieldType) || isEntityOrEnum(model, fieldType) || isInput(model, fieldType))) {
                 model.addProblem(path("inputs", entityName, "fields", fieldName, "type"), fieldType, "%s is not a valid type");
             }
         }
         else if ("outputs".equals(entityType)) {
-            if(!(isEntityOrEnum(model, fieldType) || isStandardFieldType(fieldType) || isInput(model, fieldType) || isOutput(model, fieldType))) {
+            if(!(isStandardFieldType(fieldType) || isEntityOrEnum(model, fieldType) || isInput(model, fieldType) || isOutput(model, fieldType))) {
                 model.addProblem(path("outputs", entityName, "fields", fieldName, "type"), fieldType, "%s is not a valid type");
             }
         }
         else if ("events".equals(entityType)) {
-            if (!(isEntityOrEnum(model, fieldType) || isStandardFieldType(fieldType) || isEvent(model, fieldType))) {
+            if (!(isStandardFieldType(fieldType) || isEntityOrEnum(model, fieldType) || isEvent(model, fieldType))) {
                 model.addProblem(path("events", entityName, "fields", fieldName, "type"), fieldType, "%s is not a valid type");
             }
         }
@@ -155,7 +155,7 @@ public class ZdlModelValidator {
     }
 
     private boolean isStandardFieldType(String fieldType) {
-        return standardFieldTypes.contains(fieldType) || extraFieldTypes.contains(fieldType);
+        return fieldType != null && (standardFieldTypes.contains(fieldType) || extraFieldTypes.contains(fieldType));
     }
 
     private boolean isEntity(ZdlModel model, String entityName) {
