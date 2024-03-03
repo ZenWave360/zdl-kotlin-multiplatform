@@ -18,7 +18,7 @@ import java.util.Set;
 
 public class ZdlParser {
 
-    public static final List<String> STANDARD_FIELD_TYPES = List.of("String", "Integer", "Long", "BigDecimal", "Float", "Double", "Enum", "Boolean", "LocalDate", "ZonedDateTime", "Instant", "Duration", "UUID", "Blob", "AnyBlob", "ImageBlob", "TextBlob");
+    public static final List<String> STANDARD_FIELD_TYPES = List.of("String", "Integer", "Long", "int", "long", "BigDecimal", "Float", "float", "Double", "double", "Enum", "Boolean", "boolean", "LocalDate", "ZonedDateTime", "Instant", "Duration", "UUID", "byte", "byte[]", "Blob", "AnyBlob", "ImageBlob", "TextBlob");
 
     private List<String> standardFieldTypes = STANDARD_FIELD_TYPES;
     private List<String> extraFieldTypes = List.of();

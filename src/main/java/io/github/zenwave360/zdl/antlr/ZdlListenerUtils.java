@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -102,6 +103,13 @@ class ZdlListenerUtils {
         var list = new ArrayList<>();
         ctx.value().forEach(value -> list.add(getValueText(value)));
         return list;
+    }
+
+    static List<String> getArray(ParserRuleContext ctx, String split) {
+        if(ctx == null) {
+            return null;
+        }
+        return Arrays.stream(ctx.getText().split(split)).map(String::trim).toList();
     }
 
     static String pluralize(String name) {

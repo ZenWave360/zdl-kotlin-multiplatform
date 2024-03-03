@@ -82,6 +82,7 @@ entity CustomerOrder {
       lastName String required
       email String required
       phone String required
+      avatar byte[]
       address Address {
         street String required
         city String
@@ -112,6 +113,10 @@ entity CustomerOrder {
     }
 }
 
+@aggregate
+entity Aggregate2 {
+}
+
 enum OrderStatus {
     RECEIVED, KITCHEN_ACCEPTED, DELIVERY_ACCEPTED, CONFIRMED,
     KITCHEN_IN_PROGRESS, KITCHEN_READY, KITCHEN_DELIVERED,
@@ -126,11 +131,11 @@ relationship ManyToOne {
     Address{customer} to Customer
 }
 relationship ManyToOne {
-    Address{customer2} to Customer
-    Address{customer3} to Customer
+    Address{customer2 required} to Customer
+    Address{customer3(lastname) required} to Customer
 }
 relationship OneToMany {
-    Customer{addresses} to /** Address.customer javadoc */ Address{customer}
+    Customer{addresses(lastname)} to /** Address.customer javadoc */ Address{customer}
 }
 relationship OneToOne {
     Customer{address} to @Id Address{customer}
@@ -212,6 +217,10 @@ service OrdersService for (CustomerOrder) {
 
     @post({path: "/search", params: {param1: String, param2: Integer}})
     searchOrders(OrdersFilter) CustomerOrder[]
+}
+
+service OrdersService2 for (CustomerOrder, Aggregate2) {
+
 }
 
 /** CustomerOrderOutput javadoc */
