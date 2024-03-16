@@ -436,6 +436,62 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
+    public void enterAggregate(ZdlParser.AggregateContext ctx) {
+        var aggregateName = getText(ctx.aggregate_name());
+        var javadoc = javadoc(ctx.javadoc());
+        var aggregateRoot = getText(ctx.aggregate_root());
+        currentStack.push(new FluentMap()
+                .with("name", aggregateName)
+                .with("type", "aggregates")
+                .with("className", camelCase(aggregateName))
+                .with("javadoc", javadoc)
+                .with("aggregateRoot", aggregateRoot)
+                .with("commands", new FluentMap())
+        );
+        model.appendTo("aggregates", aggregateName, currentStack.peek());
+
+        var name =  currentStack.peek().get("name");
+        var location = "aggregates." + name;
+        model.setLocation(location, getLocations(ctx));
+        model.setLocation(location + ".name", getLocations(ctx.aggregate_name()));
+        model.setLocation(location + ".aggregateRoot", getLocations(ctx.aggregate_root()));
+    }
+
+    @Override
+    public void exitAggregate(io.github.zenwave360.zdl.antlr.ZdlParser.AggregateContext ctx) {
+        currentStack.pop();
+    }
+
+    @Override
+    public void enterAggregate_command(io.github.zenwave360.zdl.antlr.ZdlParser.Aggregate_commandContext ctx) {
+        var aggregateName = getText(((io.github.zenwave360.zdl.antlr.ZdlParser.AggregateContext) ctx.getParent()).aggregate_name());
+        var commandName = getText(ctx.aggregate_command_name());
+        var location = "aggregates." + aggregateName + ".commands." + commandName;
+        var parameter = ctx.aggregate_command_parameter() != null? ctx.aggregate_command_parameter().getText() : null;
+        var withEvents = getServiceMethodEvents(location, ctx.with_events());
+        var javadoc = javadoc(first(ctx.javadoc(), ctx.suffix_javadoc()));
+
+        var method = new FluentMap()
+                .with("name", commandName)
+                .with("aggregateName", aggregateName)
+                .with("parameter", parameter)
+                .with("withEvents", withEvents)
+                .with("javadoc", javadoc)
+                ;
+        currentStack.peek().appendTo("commands", commandName, method);
+        currentStack.push(method);
+
+        model.setLocation(location, getLocations(ctx));
+        model.setLocation(location + ".name", getLocations(ctx.aggregate_command_name()));
+        model.setLocation(location + ".parameter", getLocations(ctx.aggregate_command_parameter()));
+    }
+
+    @Override
+    public void exitAggregate_command(ZdlParser.Aggregate_commandContext ctx) {
+        currentStack.pop();
+    }
+
+    @Override
     public void enterService(io.github.zenwave360.zdl.antlr.ZdlParser.ServiceContext ctx) {
         var serviceName = getText(ctx.service_name());
         var serviceJavadoc = javadoc(ctx.javadoc());
@@ -471,7 +527,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var returnType = ctx.service_method_return() != null? ctx.service_method_return().ID().getText() : null;
         var returnTypeIsArray = ctx.service_method_return() != null? ctx.service_method_return().ARRAY() != null : null;
         var returnTypeIsOptional = ctx.service_method_return() != null? ctx.service_method_return().OPTIONAL() != null : null;
-        var withEvents = getServiceMethodEvents(location, ctx.service_method_with_events());
+        var withEvents = getServiceMethodEvents(location, ctx.with_events());
         var javadoc = javadoc(first(ctx.javadoc(), ctx.suffix_javadoc()));
 
         var method = new FluentMap()
@@ -499,23 +555,23 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         currentStack.pop();
     }
 
-    private List<Object> getServiceMethodEvents(String location, io.github.zenwave360.zdl.antlr.ZdlParser.Service_method_with_eventsContext ctx) {
+    private List<Object> getServiceMethodEvents(String location, io.github.zenwave360.zdl.antlr.ZdlParser.With_eventsContext ctx) {
         model.setLocation(location + ".withEvents", getLocations(ctx));
         var events = new ArrayList<>();
         if (ctx != null) {
             AtomicInteger i = new AtomicInteger(0);
-            ctx.service_method_events().forEach(event -> {
-                if (event.service_method_event() != null) {
-                    var eventName = getText(event.service_method_event());
+            ctx.with_events_events().forEach(event -> {
+                if (event.with_events_event() != null) {
+                    var eventName = getText(event.with_events_event());
                     events.add(eventName);
-                    model.setLocation(location + ".withEvents." + i.get(), getLocations(event.service_method_event()));
-                    model.setLocation(location + ".withEvents." + eventName, getLocations(event.service_method_event()));
+                    model.setLocation(location + ".withEvents." + i.get(), getLocations(event.with_events_event()));
+                    model.setLocation(location + ".withEvents." + eventName, getLocations(event.with_events_event()));
                 }
-                if (event.service_method_events_or() != null) {
-                    var orEvents = event.service_method_events_or().service_method_event().stream().map(ParseTree::getText).collect(Collectors.toList());
+                if (event.with_events_events_or() != null) {
+                    var orEvents = event.with_events_events_or().with_events_event().stream().map(ParseTree::getText).collect(Collectors.toList());
                     events.add(orEvents);
                     int j = 0;
-                    for (var eventContext: event.service_method_events_or().service_method_event()) {
+                    for (var eventContext: event.with_events_events_or().with_events_event()) {
                         model.setLocation(location + ".withEvents." + i.get() + "." + j, getLocations(eventContext));
                         model.setLocation(location + ".withEvents." + getText(eventContext), getLocations(eventContext));
                         j++;

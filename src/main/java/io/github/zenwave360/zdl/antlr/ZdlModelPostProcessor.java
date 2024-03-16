@@ -10,6 +10,7 @@ import java.util.Map;
 public class ZdlModelPostProcessor {
 
     public static ZdlModel postProcess(ZdlModel model) {
+        var aggregates = model.getAggregates();
         var entities = model.getEntities();
         var inputs = model.getInputs();
         var outputs = model.getOutputs();
@@ -41,6 +42,9 @@ public class ZdlModelPostProcessor {
         }
 
         var allEntitiesAndEnums = new HashMap<>();
+        if(aggregates != null) {
+            allEntitiesAndEnums.putAll(aggregates);
+        }
         if(entities != null) {
             allEntitiesAndEnums.putAll(entities);
         }

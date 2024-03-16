@@ -33,6 +33,7 @@ public class ZdlModelValidator {
         validateEntitiesFields(model, "inputs");
         validateEntitiesFields(model, "outputs");
         validateEntitiesFields(model, "events");
+        validateAggregates(model);
         validateServices(model);
         validateRelationships(model);
         return model;
@@ -105,6 +106,44 @@ public class ZdlModelValidator {
                 model.addProblem(path("events", entityName, "fields", fieldName, "type"), fieldType, "%s is not a valid type");
             }
         }
+    }
+
+    private List<Map> validateAggregates(ZdlModel model) {
+        var services = JSONPath.get(model, "$.aggregates", Map.<String, Object>of());
+        for (Map.Entry<String, Object> service : services.entrySet()) {
+            var aggregateRoot = (String) JSONPath.get(service.getValue(), "$.aggregateRoot");
+            if(aggregateRoot == null || !isEntity(model, aggregateRoot)) {
+                model.addProblem(path("aggregates", service.getKey(), "aggregateRoot"),  aggregateRoot,"%s is not an entity");
+            }
+
+
+            var methods = JSONPath.get(service.getValue(), "$.commands[*]", List.<Map>of());
+            for (Map method : methods) {
+                var methodName = (String) JSONPath.get(method, "$.name");
+                var parameter = (String) JSONPath.get(method, "$.parameter");
+                if(parameter != null && !isEntity(model, parameter) && !isInput(model, parameter)) {
+                    model.addProblem(path("aggregates", service.getKey(), "commands", methodName, "parameter"), parameter, "%s is not an entity or input");
+                }
+                List<Object> withEvents = (List) method.getOrDefault("withEvents", List.of());
+                for (int i = 0; i < withEvents.size(); i++) {
+                    var event = withEvents.get(i);
+                    if (event instanceof List) {
+                        for (int j = 0; j < ((List<?>) event).size(); j++) {
+                            var innerEvent = (String) ((List<?>) event).get(j);
+                            if(!isEvent(model, innerEvent)) {
+                                model.addProblem(path("aggregates", service.getKey(), "commands", methodName, "withEvents", i+"", j+""), innerEvent, "%s is not an event");
+                            }
+                        }
+                    } else {
+                        if(!isEvent(model, (String) event)) {
+                            model.addProblem(path("aggregates", service.getKey(), "commands", methodName, "withEvents", i+""), (String) event, "%s is not an event");
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     private List<Map> validateServices(ZdlModel model) {
