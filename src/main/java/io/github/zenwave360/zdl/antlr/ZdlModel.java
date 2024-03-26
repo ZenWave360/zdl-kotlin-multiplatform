@@ -8,6 +8,7 @@ public class ZdlModel extends FluentMap {
     public ZdlModel() {
         put("config", new FluentMap());
         put("apis", new FluentMap());
+        put("aggregates", new FluentMap());
         put("entities", new FluentMap());
         put("enums", new FluentMap());
         put("relationships", new FluentMap());
@@ -17,6 +18,10 @@ public class ZdlModel extends FluentMap {
         put("events", new FluentMap());
         put("locations", new FluentMap());
         put("problems", new ArrayList<>());
+    }
+
+    public FluentMap getAggregates() {
+        return (FluentMap) get("aggregates");
     }
 
     public FluentMap getEntities() {

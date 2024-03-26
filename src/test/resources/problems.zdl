@@ -71,6 +71,10 @@ apis {
 
 // == Entities =============================
 
+aggregate CustomerOrderAggregate(CustomerOrderX) {
+    commandName(CustomerOrderInputXX)
+}
+
 @aggregate
 entity CustomerOrder {
     orderTime Instant = "Instant.now()" required /** orderTime javadoc */
