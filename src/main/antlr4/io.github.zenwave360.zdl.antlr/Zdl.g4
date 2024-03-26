@@ -65,6 +65,7 @@ MANY_TO_ONE: 'ManyToOne';
 ONE_TO_MANY: 'OneToMany';
 ONE_TO_ONE: 'OneToOne';
 SERVICE: 'service';
+AGGREGATE: 'aggregate';
 PARAM_ID: 'id';
 FOR: 'for';
 TO: 'to';
@@ -115,7 +116,7 @@ PATTERN_REGEX: '/' .*? '/' ; // TODO: improve regex
 ERRCHAR: . -> channel(HIDDEN);
 
 // Rules
-zdl: global_javadoc? legacy_constants config? apis? (policies | entity | enum | input | output | event | relationships | service | service_legacy)* EOF;
+zdl: global_javadoc? legacy_constants config? apis? (policies | aggregate | entity | enum | input | output | event | relationships | service | service_legacy)* EOF;
 global_javadoc: JAVADOC;
 javadoc: JAVADOC;
 suffix_javadoc: JAVADOC;
@@ -123,7 +124,7 @@ suffix_javadoc: JAVADOC;
 legacy_constants: LEGACY_CONSTANT*;
 
 // values
-keyword: ID | CONFIG | APIS | PLUGINS | DISABLED | ASYNCAPI | OPENAPI | ENTITY | INPUT | OUTPUT | EVENT | RELATIONSHIP | SERVICE | PARAM_ID | FOR | TO | WITH_EVENTS | WITH | REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
+keyword: ID | CONFIG | APIS | PLUGINS | DISABLED | ASYNCAPI | OPENAPI | ENTITY | AGGREGATE | INPUT | OUTPUT | EVENT | RELATIONSHIP | SERVICE | PARAM_ID | FOR | TO | WITH_EVENTS | WITH | REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
 
 complex_value: value | array | object;
 value: simple | object;
@@ -227,20 +228,29 @@ relationship_field_name: keyword;
 relationship_description_field: ID;
 relationship_field_required: REQUIRED;
 
+// aggregates
+aggregate: javadoc? annotations AGGREGATE aggregate_name LPAREN aggregate_root RPAREN LBRACE aggregate_command* RBRACE;
+aggregate_name: ID;
+aggregate_root: ID;
+aggregate_command: javadoc? annotations aggregate_command_name LPAREN aggregate_command_parameter? RPAREN with_events? suffix_javadoc?;
+aggregate_command_name: ID;
+aggregate_command_parameter: ID;
 
 // services
 service: javadoc? annotations SERVICE service_name FOR LPAREN service_aggregates RPAREN LBRACE service_method* RBRACE;
 service_name: ID;
 service_aggregates: ID (COMMA ID)*;
-service_method: javadoc? annotations service_method_name LPAREN service_method_parameter_id? COMMA? service_method_parameter? RPAREN service_method_return? service_method_with_events? suffix_javadoc?;
+service_method: javadoc? annotations service_method_name LPAREN service_method_parameter_id? COMMA? service_method_parameter? RPAREN service_method_return? with_events? suffix_javadoc?;
 service_method_name: ID;
 service_method_parameter_id: PARAM_ID;
 service_method_parameter: ID;
 service_method_return: ID | ID ARRAY | ID OPTIONAL;
-service_method_with_events: WITH_EVENTS (service_method_events)*;
-service_method_events: service_method_event | service_method_events_or;
-service_method_event: ID;
-service_method_events_or: LBRACK service_method_event (OR service_method_event)* RBRACK;
+
+
+with_events: WITH_EVENTS (with_events_events)*;
+with_events_events: with_events_event| with_events_events_or;
+with_events_event: ID;
+with_events_events_or: LBRACK with_events_event (OR with_events_event)* RBRACK;
 
 service_legacy: SERVICE service_aggregates WITH ID;
 
