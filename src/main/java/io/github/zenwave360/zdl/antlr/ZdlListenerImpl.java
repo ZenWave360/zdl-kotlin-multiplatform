@@ -590,6 +590,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var kebabCase = kebabCase(name);
         currentStack.push(new FluentMap()
                 .with("name", name)
+                .with("className", camelCase(name))
                 .with("type", "events")
                 .with("kebabCase", kebabCase)
                 .with("javadoc", javadoc)

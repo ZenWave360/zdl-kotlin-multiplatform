@@ -72,7 +72,7 @@ apis {
 // == Entities =============================
 
 aggregate CustomerOrderAggregate(CustomerOrder) {
-    customerOrderCommand(CustomerOrderInput) withEvents CustomerOrderCreated
+    customerOrderCommand(CustomerOrderInput) withEvents OrderEvent
 }
 
 @aggregate
