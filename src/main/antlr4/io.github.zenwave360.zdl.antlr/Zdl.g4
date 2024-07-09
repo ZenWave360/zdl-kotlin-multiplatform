@@ -47,6 +47,7 @@ ARRAY: '[]';
 OPTIONAL: '?';
 
 // Keywords
+IMPORT: 'import';
 CONFIG: 'config';
 APIS: 'apis';
 PLUGINS: 'plugins';
@@ -116,7 +117,10 @@ PATTERN_REGEX: '/' .*? '/' ; // TODO: improve regex
 ERRCHAR: . -> channel(HIDDEN);
 
 // Rules
-zdl: global_javadoc? legacy_constants config? apis? (policies | aggregate | entity | enum | input | output | event | relationships | service | service_legacy)* EOF;
+zdl: imports global_javadoc? legacy_constants config? apis? (policies | aggregate | entity | enum | input | output | event | relationships | service | service_legacy)* EOF;
+
+imports: ('@import' LPAREN import_value RPAREN)*;
+import_value: string;
 global_javadoc: JAVADOC;
 javadoc: JAVADOC;
 suffix_javadoc: JAVADOC;
@@ -124,10 +128,11 @@ suffix_javadoc: JAVADOC;
 legacy_constants: LEGACY_CONSTANT*;
 
 // values
-keyword: ID | CONFIG | APIS | PLUGINS | DISABLED | ASYNCAPI | OPENAPI | ENTITY | AGGREGATE | INPUT | OUTPUT | EVENT | RELATIONSHIP | SERVICE | PARAM_ID | FOR | TO | WITH_EVENTS | WITH | REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
+keyword: ID | IMPORT | CONFIG | APIS | PLUGINS | DISABLED | ASYNCAPI | OPENAPI | ENTITY | AGGREGATE | INPUT | OUTPUT | EVENT | RELATIONSHIP | SERVICE | PARAM_ID | FOR | TO | WITH_EVENTS | WITH | REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
 
 complex_value: value | array | object;
 value: simple | object;
+string: keyword | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING;
 simple: keyword | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL;
 pair: keyword COLON value;
 object: LBRACE pair (COMMA pair)* RBRACE;
@@ -192,7 +197,7 @@ field_validations: field_validation_name (LPAREN field_validation_value RPAREN)?
 field_validation_name: REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
 field_validation_value: INT | ID | PATTERN_REGEX;
 nested_field_validations: nested_field_validation_name (LPAREN nested_field_validation_value RPAREN)?;
-nested_field_validation_name: REQUIRED | UNIQUE;
+nested_field_validation_name: REQUIRED | UNIQUE | MIN | MAX;
 nested_field_validation_value: INT | ID | PATTERN_REGEX;
 
 // enums
@@ -222,11 +227,14 @@ relationship_type: MANY_TO_MANY | MANY_TO_ONE| ONE_TO_MANY | ONE_TO_ONE;
 relationship: relationship_from TO relationship_to;
 relationship_from: javadoc? annotations relationship_definition;
 relationship_to: javadoc? annotations relationship_definition;
-relationship_definition: relationship_entity_name (LBRACE relationship_field_name (LPAREN relationship_description_field RPAREN)? relationship_field_required? RBRACE)?;
+relationship_definition: relationship_entity_name (LBRACE relationship_field_name (LPAREN relationship_description_field RPAREN)? relationship_field_validations RBRACE)?;
 relationship_entity_name: ID;
 relationship_field_name: keyword;
 relationship_description_field: ID;
+relationship_field_validations: relationship_field_required? relationship_field_min? relationship_field_max?;
 relationship_field_required: REQUIRED;
+relationship_field_min: MIN(INT);
+relationship_field_max: MAX(INT);
 
 // aggregates
 aggregate: javadoc? annotations AGGREGATE aggregate_name LPAREN aggregate_root RPAREN LBRACE aggregate_command* RBRACE;

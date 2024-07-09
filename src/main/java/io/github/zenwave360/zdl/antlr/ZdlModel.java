@@ -6,6 +6,7 @@ import java.util.Map;
 
 public class ZdlModel extends FluentMap {
     public ZdlModel() {
+        put("imports", new ArrayList<>());
         put("config", new FluentMap());
         put("apis", new FluentMap());
         put("aggregates", new FluentMap());

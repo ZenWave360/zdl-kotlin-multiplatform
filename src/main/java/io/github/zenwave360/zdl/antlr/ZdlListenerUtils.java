@@ -35,6 +35,23 @@ class ZdlListenerUtils {
         return getText(ctx);
     }
 
+    static Object getValueText(io.github.zenwave360.zdl.antlr.ZdlParser.StringContext ctx) {
+        if(ctx == null) {
+            return null;
+        }
+        if(ctx.keyword() != null) {
+            return ctx.keyword().getText();
+        }
+        if(ctx.SINGLE_QUOTED_STRING() != null) {
+            return unquote(ctx.SINGLE_QUOTED_STRING().getText(), "'");
+        }
+        if(ctx.DOUBLE_QUOTED_STRING() != null) {
+            return unquote(ctx.DOUBLE_QUOTED_STRING().getText(), "\"");
+        }
+        return getText(ctx);
+    }
+
+
     static Object getValueText(io.github.zenwave360.zdl.antlr.ZdlParser.SimpleContext ctx) {
         if(ctx == null) {
             return null;

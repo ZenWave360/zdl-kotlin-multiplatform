@@ -1,3 +1,5 @@
+@import("com.example:artifact:RELEASE")
+
 /**
  * ZenWave Online Food Delivery - Orders Module.
  */
@@ -108,13 +110,13 @@ entity CustomerOrder {
     /**
      * orderItems javadoc
      */
-    orderItems OrderItem[] {
+    orderItems OrderItem[] min(1) max(100) {
        menuItemId String required
        name String required
        description String
        price BigDecimal required
        quantity Integer required
-    }
+    } max(200)
 }
 
 @aggregate

@@ -34,6 +34,8 @@ public class ZdlListenerTest {
         ZdlModel model = parseZdl("src/test/resources/complete.zdl");
         assertEquals("ZenWave Online Food Delivery - Orders Module.", get(model, "$.javadoc"));
 
+        assertEquals("com.example:artifact:RELEASE", get(model, "$.imports[0]"));
+
         // CONFIG
         assertEquals("io.zenwave360.example.orders", get(model, "$.config.basePackage"));
         assertEquals("mongodb", get(model, "$.config.persistence"));
@@ -90,6 +92,8 @@ public class ZdlListenerTest {
         assertEquals("OrderItem", get(model, "$.entities.CustomerOrder.fields.orderItems.type"));
         assertNull(get(model, "$.entities.CustomerOrder.fields.orderItems.initialValue"));
         assertNull(get(model, "$.entities.CustomerOrder.fields.orderItems.validations.required"));
+        assertEquals("1", get(model, "$.entities.CustomerOrder.fields.orderItems.validations.min.value"));
+        assertEquals("200", get(model, "$.entities.CustomerOrder.fields.orderItems.validations.max.value"));
         assertEquals(false, get(model, "$.entities.CustomerOrder.fields.orderItems.isEnum"));
         assertEquals(true, get(model, "$.entities.CustomerOrder.fields.orderItems.isEntity"));
         assertEquals(true, get(model, "$.entities.CustomerOrder.fields.orderItems.isArray"));

@@ -62,6 +62,13 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
+    public void enterImports(ZdlParser.ImportsContext ctx) {
+        for (ZdlParser.Import_valueContext importValue : ctx.import_value()) {
+            model.appendToList("imports", getValueText(importValue.string()));
+        }
+    }
+
+    @Override
     public void enterConfig_option(io.github.zenwave360.zdl.antlr.ZdlParser.Config_optionContext ctx) {
         var name = ctx.field_name().getText();
         var value = getComplexValue(ctx.complex_value());
@@ -106,7 +113,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterPlugin(ZdlParser.PluginContext ctx) {
+    public void enterPlugin(io.github.zenwave360.zdl.antlr.ZdlParser.PluginContext ctx) {
         var name = getText(ctx.plugin_name());
         var javadoc = javadoc(ctx.javadoc());
         var disabled = ctx.plugin_disabled().DISABLED() != null;
@@ -135,21 +142,21 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterPlugin_config_option(ZdlParser.Plugin_config_optionContext ctx) {
+    public void enterPlugin_config_option(io.github.zenwave360.zdl.antlr.ZdlParser.Plugin_config_optionContext ctx) {
         var name = getText(ctx.field_name());
         var value = getComplexValue(ctx.complex_value());
         currentStack.peek().appendTo("config", name, value);
     }
 
     @Override
-    public void enterPlugin_config_cli_option(ZdlParser.Plugin_config_cli_optionContext ctx) {
+    public void enterPlugin_config_cli_option(io.github.zenwave360.zdl.antlr.ZdlParser.Plugin_config_cli_optionContext ctx) {
         var keyword = getText(ctx.keyword());
         var value = getText(ctx.simple());
         currentStack.peek().appendTo("cliOptions", keyword, value);
     }
 
     @Override
-    public void exitPlugin(ZdlParser.PluginContext ctx) {
+    public void exitPlugin(io.github.zenwave360.zdl.antlr.ZdlParser.PluginContext ctx) {
         currentStack.pop();
     }
 
@@ -283,7 +290,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         String entityJavadoc = javadoc(parent.javadoc());
         String tableName = getText(parent.entity_table_name());
         var validations = processNestedFieldValidations(ctx.nested_field_validations());
-        ((Map)parentField).put("validations", validations);
+        ((FluentMap) parentField).appendTo("validations", validations);
         currentStack.push(processEntity(entityName, entityJavadoc, tableName).with("type", currentCollection.split("\\.")[0]));
         currentStack.peek().appendTo("options", "embedded", true);
         var parenFieldOptions = JSONPath.get(parentField, "options", Map.of());
@@ -361,14 +368,21 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
             var fromField = getText(ctx.relationship_from().relationship_definition().relationship_field_name());
             var commentInFrom = javadoc(ctx.relationship_from().javadoc());
             var fromOptions = relationshipOptions(ctx.relationship_from().annotations().option());
-            var isInjectedFieldInFromRequired = ctx.relationship_from().relationship_definition().relationship_field_required() != null;
+            var isInjectedFieldInFromRequired = isRequired(ctx.relationship_from().relationship_definition());
             var injectedFieldInFromDescription = getText(ctx.relationship_from().relationship_definition().relationship_description_field());
+            var relationshipValidations = relationshipValidations(ctx.relationship_from().relationship_definition());
             model.setLocation(location + ".from.entity", getLocations(ctx.relationship_from().relationship_definition().relationship_entity_name()));
             model.setLocation(location + ".from.field", getLocations(ctx.relationship_from().relationship_definition().relationship_field_name()));
+            if (ctx.relationship_from().relationship_definition().relationship_field_validations() != null) {
+                model.setLocation(location + ".from.validations", getLocations(ctx.relationship_from().relationship_definition().relationship_field_validations()));
+                model.setLocation(location + ".from.validations.min", getLocations(ctx.relationship_from().relationship_definition().relationship_field_validations().relationship_field_min()));
+                model.setLocation(location + ".from.validations.max", getLocations(ctx.relationship_from().relationship_definition().relationship_field_validations().relationship_field_max()));
+            }
             relationship.with("from", from)
                     .with("commentInFrom", commentInFrom)
                     .with("injectedFieldInFrom", fromField)
                     .with("fromOptions", fromOptions)
+                    .with("fromValidations", relationshipValidations)
                     .with("injectedFieldInFromDescription", injectedFieldInFromDescription)
                     .with("isInjectedFieldInFromRequired", isInjectedFieldInFromRequired);
         }
@@ -378,19 +392,52 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
             var toField = getText(ctx.relationship_to().relationship_definition().relationship_field_name());
             var commentInTo = javadoc(ctx.relationship_to().javadoc());
             var toOptions = relationshipOptions(ctx.relationship_to().annotations().option());
-            var isInjectedFieldInToRequired = ctx.relationship_to().relationship_definition().relationship_field_required() != null;
+            var isInjectedFieldInToRequired = isRequired(ctx.relationship_to().relationship_definition());
             var injectedFieldInToDescription = getText(ctx.relationship_to().relationship_definition().relationship_description_field());
+            var relationshipValidations = relationshipValidations(ctx.relationship_to().relationship_definition());
             model.setLocation(location + ".to.entity", getLocations(ctx.relationship_to().relationship_definition().relationship_entity_name()));
             model.setLocation(location + ".to.field", getLocations(ctx.relationship_to().relationship_definition().relationship_field_name()));
+            if (ctx.relationship_to().relationship_definition().relationship_field_validations() != null) {
+                model.setLocation(location + ".to.validations", getLocations(ctx.relationship_to().relationship_definition().relationship_field_validations()));
+                model.setLocation(location + ".to.validations.min", getLocations(ctx.relationship_to().relationship_definition().relationship_field_validations().relationship_field_min()));
+                model.setLocation(location + ".to.validations.max", getLocations(ctx.relationship_to().relationship_definition().relationship_field_validations().relationship_field_max()));
+            }
             relationship.with("to", to)
                     .with("commentInTo", commentInTo)
                     .with("injectedFieldInTo", toField)
                     .with("toOptions", toOptions)
+                    .with("toValidations", relationshipValidations)
                     .with("injectedFieldInToDescription", injectedFieldInToDescription)
                     .with("isInjectedFieldInToRequired", isInjectedFieldInToRequired);
         }
 
         model.getRelationships().appendTo(relationshipType, relationshipName, relationship);
+    }
+
+    private boolean isRequired(io.github.zenwave360.zdl.antlr.ZdlParser.Relationship_definitionContext relationshipDefinitionContext) {
+        return relationshipDefinitionContext.relationship_field_validations() != null
+                && relationshipDefinitionContext.relationship_field_validations().relationship_field_required() != null;
+    }
+
+    private Object relationshipValidations(io.github.zenwave360.zdl.antlr.ZdlParser.Relationship_definitionContext relationshipDefinitionContext) {
+        var validations = new FluentMap();
+        if (relationshipDefinitionContext.relationship_field_validations() != null) {
+            if (relationshipDefinitionContext.relationship_field_validations().relationship_field_required() != null) {
+                var name = "required";
+                validations.with(name, Map.of("name", name, "value", true));
+            }
+            if (relationshipDefinitionContext.relationship_field_validations().relationship_field_min() != null) {
+                var name = "min";
+                var value = getText(relationshipDefinitionContext.relationship_field_validations().relationship_field_min());
+                validations.with(name, Map.of("name", name, "value", value));
+            }
+            if (relationshipDefinitionContext.relationship_field_validations().relationship_field_max() != null) {
+                var name = "max";
+                var value = getText(relationshipDefinitionContext.relationship_field_validations().relationship_field_min());
+                validations.with(name, Map.of("name", name, "value", value));
+            }
+        }
+        return validations;
     }
 
     private String removeJavadoc(String text) {
@@ -400,7 +447,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         return text.replaceAll(regex, "");
     }
 
-    private String relationshipDescription(ZdlParser.Relationship_definitionContext ctx) {
+    private String relationshipDescription(io.github.zenwave360.zdl.antlr.ZdlParser.Relationship_definitionContext ctx) {
         var description = "";
         if(ctx != null) {
             description = description + getText(ctx.relationship_entity_name());
@@ -440,7 +487,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterAggregate(ZdlParser.AggregateContext ctx) {
+    public void enterAggregate(io.github.zenwave360.zdl.antlr.ZdlParser.AggregateContext ctx) {
         var aggregateName = getText(ctx.aggregate_name());
         var javadoc = javadoc(ctx.javadoc());
         var aggregateRoot = getText(ctx.aggregate_root());
@@ -491,7 +538,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitAggregate_command(ZdlParser.Aggregate_commandContext ctx) {
+    public void exitAggregate_command(io.github.zenwave360.zdl.antlr.ZdlParser.Aggregate_commandContext ctx) {
         currentStack.pop();
     }
 
