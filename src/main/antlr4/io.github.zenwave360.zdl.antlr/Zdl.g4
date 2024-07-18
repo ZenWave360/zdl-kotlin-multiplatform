@@ -197,8 +197,8 @@ field_validations: field_validation_name (LPAREN field_validation_value RPAREN)?
 field_validation_name: REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
 field_validation_value: INT | ID | PATTERN_REGEX;
 nested_field_validations: nested_field_validation_name (LPAREN nested_field_validation_value RPAREN)?;
-nested_field_validation_name: REQUIRED | UNIQUE | MIN | MAX;
-nested_field_validation_value: INT | ID | PATTERN_REGEX;
+nested_field_validation_name: REQUIRED | UNIQUE | MINLENGTH | MAXLENGTH;
+nested_field_validation_value: INT | ID;
 
 // enums
 enum: javadoc? annotations ENUM enum_name enum_body;
@@ -206,7 +206,7 @@ enum_name: ID;
 enum_body: LBRACE (enum_value)* RBRACE;
 enum_value: javadoc? enum_value_name (LPAREN enum_value_value RPAREN)? suffix_javadoc? COMMA?;
 enum_value_name: ID;
-enum_value_value: simple;
+enum_value_value: INT;
 
 // inputs
 input: javadoc? annotations INPUT input_name LBRACE fields RBRACE;
@@ -233,8 +233,9 @@ relationship_field_name: keyword;
 relationship_description_field: ID;
 relationship_field_validations: relationship_field_required? relationship_field_min? relationship_field_max?;
 relationship_field_required: REQUIRED;
-relationship_field_min: MIN(INT);
-relationship_field_max: MAX(INT);
+relationship_field_min: MINLENGTH LPAREN relationship_field_value RPAREN;
+relationship_field_max: MAXLENGTH LPAREN relationship_field_value RPAREN;
+relationship_field_value: INT;
 
 // aggregates
 aggregate: javadoc? annotations AGGREGATE aggregate_name LPAREN aggregate_root RPAREN LBRACE aggregate_command* RBRACE;

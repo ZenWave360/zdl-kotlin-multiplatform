@@ -62,8 +62,8 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterImports(ZdlParser.ImportsContext ctx) {
-        for (ZdlParser.Import_valueContext importValue : ctx.import_value()) {
+    public void enterImports(io.github.zenwave360.zdl.antlr.ZdlParser.ImportsContext ctx) {
+        for (io.github.zenwave360.zdl.antlr.ZdlParser.Import_valueContext importValue : ctx.import_value()) {
             model.appendToList("imports", getValueText(importValue.string()));
         }
     }
@@ -344,7 +344,10 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     public void enterEnum_value(io.github.zenwave360.zdl.antlr.ZdlParser.Enum_valueContext ctx) {
         var name = getText(ctx.enum_value_name());
         var javadoc = javadoc(first(ctx.javadoc(), ctx.suffix_javadoc()));
-        var value = ctx.enum_value_value() != null? getValueText(ctx.enum_value_value().simple()) : null;
+        var value = getText(ctx.enum_value_value());
+        if(value != null) {
+            currentStack.peek().with("hasValue", true);
+        }
         currentStack.peek().appendTo("values", name, new FluentMap()
                 .with("name", name)
                 .with("javadoc", javadoc)
@@ -427,13 +430,13 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
                 validations.with(name, Map.of("name", name, "value", true));
             }
             if (relationshipDefinitionContext.relationship_field_validations().relationship_field_min() != null) {
-                var name = "min";
-                var value = getText(relationshipDefinitionContext.relationship_field_validations().relationship_field_min());
+                var name = "minlength";
+                var value = getText(relationshipDefinitionContext.relationship_field_validations().relationship_field_min().relationship_field_value());
                 validations.with(name, Map.of("name", name, "value", value));
             }
             if (relationshipDefinitionContext.relationship_field_validations().relationship_field_max() != null) {
-                var name = "max";
-                var value = getText(relationshipDefinitionContext.relationship_field_validations().relationship_field_min());
+                var name = "maxlength";
+                var value = getText(relationshipDefinitionContext.relationship_field_validations().relationship_field_max().relationship_field_value());
                 validations.with(name, Map.of("name", name, "value", value));
             }
         }
