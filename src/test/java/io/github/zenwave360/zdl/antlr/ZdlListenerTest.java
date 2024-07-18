@@ -13,8 +13,10 @@ import java.util.Map;
 
 import static io.github.zenwave360.zdl.antlr.JSONPath.get;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ZdlListenerTest {
 
@@ -52,6 +54,10 @@ public class ZdlListenerTest {
         // PLUGINS
         assertEquals(5, get(model, "$.plugins", Map.of()).size());
         assertEquals(3, get(model, "$.plugins.ZDLToAsyncAPIPlugin.config", Map.of()).size());
+
+        // ENUMS
+        assertFalse(get(model, "$.enums.OrderStatus.hasValue", false));
+        assertTrue(get(model, "$.enums.EnumWithValue.hasValue", false));
 
         // ENTITIES
         assertEquals(6, get(model, "$.entities", Map.of()).size());
@@ -92,8 +98,8 @@ public class ZdlListenerTest {
         assertEquals("OrderItem", get(model, "$.entities.CustomerOrder.fields.orderItems.type"));
         assertNull(get(model, "$.entities.CustomerOrder.fields.orderItems.initialValue"));
         assertNull(get(model, "$.entities.CustomerOrder.fields.orderItems.validations.required"));
-        assertEquals("1", get(model, "$.entities.CustomerOrder.fields.orderItems.validations.min.value"));
-        assertEquals("200", get(model, "$.entities.CustomerOrder.fields.orderItems.validations.max.value"));
+        assertEquals("1", get(model, "$.entities.CustomerOrder.fields.orderItems.validations.minlength.value"));
+        assertEquals("200", get(model, "$.entities.CustomerOrder.fields.orderItems.validations.maxlength.value"));
         assertEquals(false, get(model, "$.entities.CustomerOrder.fields.orderItems.isEnum"));
         assertEquals(true, get(model, "$.entities.CustomerOrder.fields.orderItems.isEntity"));
         assertEquals(true, get(model, "$.entities.CustomerOrder.fields.orderItems.isArray"));
