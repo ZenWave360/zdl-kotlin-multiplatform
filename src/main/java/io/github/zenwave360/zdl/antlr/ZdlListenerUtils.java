@@ -182,20 +182,21 @@ class ZdlListenerUtils {
     }
 
 
-    static Map createCRUDMethods(List<String> entities) {
+    static Map createCRUDMethods(String serviceName, List<String> entities) {
         var methods = new FluentMap();
         for (String entity : entities) {
-            createCRUDMethods(entity.trim()).forEach(k -> methods.put((String) k.get("name"), k));
+            createCRUDMethods(serviceName, entity.trim()).forEach(k -> methods.put((String) k.get("name"), k));
         }
         return methods;
     }
 
-    static List<Map> createCRUDMethods(String entity) {
+    static List<Map> createCRUDMethods(String serviceName, String entity) {
         var path = "/" + inflector.kebabCase(inflector.pluralize(entity.toLowerCase()));
         var entityIdPath = path + "/{"+ inflector.lowerCamelCase(entity) + "Id}";
         var crudMethods = new ArrayList<Map>();
         crudMethods.add(new FluentMap()
                 .with("name", "create" + entity)
+                .with("serviceName", serviceName)
                 .with("parameter", entity)
                 .with("returnType", entity)
                 .with("options", new FluentMap().with("post", path))
@@ -203,6 +204,7 @@ class ZdlListenerUtils {
         );
         crudMethods.add(new FluentMap()
                 .with("name", "update" + entity)
+                .with("serviceName", serviceName)
                 .with("paramId", "id")
                 .with("parameter", entity)
                 .with("returnType", entity)
@@ -212,6 +214,7 @@ class ZdlListenerUtils {
         );
         crudMethods.add(new FluentMap()
                 .with("name", "get" + entity)
+                .with("serviceName", serviceName)
                 .with("paramId", "id")
                 .with("returnType", entity)
                 .with("returnTypeIsOptional", true)
@@ -220,6 +223,7 @@ class ZdlListenerUtils {
         );
         crudMethods.add(new FluentMap()
                 .with("name", "list" + pluralize(entity))
+                .with("serviceName", serviceName)
                 .with("paginated", true)
                 .with("returnType", entity)
                 .with("returnTypeIsArray", true)
@@ -230,6 +234,7 @@ class ZdlListenerUtils {
         );
         crudMethods.add(new FluentMap()
                 .with("name", "delete" + entity)
+                .with("serviceName", serviceName)
                 .with("paramId", "id")
                 .with("options", new FluentMap().with("delete", entityIdPath))
                 .with("optionsList", List.of(Map.of("name", "delete", "value", entityIdPath)))
