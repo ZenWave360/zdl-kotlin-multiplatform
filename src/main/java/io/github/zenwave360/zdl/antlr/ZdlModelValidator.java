@@ -223,7 +223,8 @@ public class ZdlModelValidator {
 
     private boolean isAggregate(ZdlModel model, String entityName) {
         return JSONPath.get(model, "$.aggregates." + entityName) != null
-                || JSONPath.get(model, "$.entities." + entityName + ".options.aggregate", false);
+                || JSONPath.get(model,"$.entities." + entityName + ".options.aggregate", false)
+                || JSONPath.get(model,"$.entities." + entityName + ".options.persistence") == null;
     }
 
     private List<String> methodEventsFlatList(Map<String, Object> method) {
