@@ -479,7 +479,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
                 .with("javadoc", serviceJavadoc)
                 .with("aggregates", serviceAggregates)
                 .with("options", Map.of("rest", true))
-                .with("methods", createCRUDMethods(serviceAggregates))
+                .with("methods", createCRUDMethods(serviceName, serviceAggregates))
         );
         model.appendTo("services", serviceName, currentStack.peek());
     }
