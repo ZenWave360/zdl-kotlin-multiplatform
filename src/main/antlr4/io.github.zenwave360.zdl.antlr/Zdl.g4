@@ -80,6 +80,7 @@ MIN: 'min';
 MAX: 'max';
 MINLENGTH: 'minlength';
 MAXLENGTH: 'maxlength';
+EMAIL: 'email';
 PATTERN: 'pattern';
 OPTION_NAME: '@' [a-zA-Z_][a-zA-Z0-9_]*;
 
@@ -128,7 +129,7 @@ suffix_javadoc: JAVADOC;
 legacy_constants: LEGACY_CONSTANT*;
 
 // values
-keyword: ID | IMPORT | CONFIG | APIS | PLUGINS | DISABLED | ASYNCAPI | OPENAPI | ENTITY | AGGREGATE | INPUT | OUTPUT | EVENT | RELATIONSHIP | SERVICE | PARAM_ID | FOR | TO | WITH_EVENTS | WITH | REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
+keyword: ID | IMPORT | CONFIG | APIS | PLUGINS | DISABLED | ASYNCAPI | OPENAPI | ENTITY | AGGREGATE | INPUT | OUTPUT | EVENT | RELATIONSHIP | SERVICE | PARAM_ID | FOR | TO | WITH_EVENTS | WITH | REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | EMAIL | PATTERN;
 
 complex_value: value | array | object;
 value: simple | object;
