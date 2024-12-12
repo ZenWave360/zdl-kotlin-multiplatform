@@ -24,11 +24,16 @@ public class ZdlListenerTest {
 
     @Test
     public void parseZdl_SuffixJavadoc() throws Exception {
-
         ZdlModel model = parseZdl("src/test/resources/suffix_javadoc.zdl");
-
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
+
+    @Test
+    public void parseZdl_Composed() throws Exception {
+        ZdlModel model = parseZdl("src/test/resources/composed.zdl");
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+    }
+
 
     @Test
     public void parseZdl_CompleteZdl() throws Exception {

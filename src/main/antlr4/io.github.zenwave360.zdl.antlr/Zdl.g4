@@ -118,9 +118,9 @@ PATTERN_REGEX: '/' .*? '/' ; // TODO: improve regex
 ERRCHAR: . -> channel(HIDDEN);
 
 // Rules
-zdl: imports global_javadoc? legacy_constants config? apis? (policies | aggregate | entity | enum | input | output | event | relationships | service | service_legacy)* EOF;
+zdl: legacy_constants (import_ | config | apis | policies | aggregate | entity | enum | input | output | event | relationships | service | service_legacy)* EOF;
 
-imports: ('@import' LPAREN import_value RPAREN)*;
+import_: '@import' LPAREN import_value RPAREN;
 import_value: string;
 global_javadoc: JAVADOC;
 javadoc: JAVADOC;
@@ -139,7 +139,7 @@ pair: keyword COLON value;
 object: LBRACE pair (COMMA pair)* RBRACE;
 array: LBRACK? value (COMMA value)* RBRACK?;
 
-config: CONFIG config_body;
+config: global_javadoc? CONFIG config_body;
 config_body: LBRACE config_option* plugins? RBRACE;
 config_option: field_name complex_value;
 

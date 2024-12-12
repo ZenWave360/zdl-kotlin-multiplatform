@@ -62,10 +62,8 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterImports(io.github.zenwave360.zdl.antlr.ZdlParser.ImportsContext ctx) {
-        for (io.github.zenwave360.zdl.antlr.ZdlParser.Import_valueContext importValue : ctx.import_value()) {
-            model.appendToList("imports", getValueText(importValue.string()));
-        }
+    public void enterImport_(io.github.zenwave360.zdl.antlr.ZdlParser.Import_Context ctx) {
+        model.appendToList("imports", getValueText(ctx.import_value().string()));
     }
 
     @Override
