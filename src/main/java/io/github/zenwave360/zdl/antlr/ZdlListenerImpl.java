@@ -574,6 +574,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var serviceName = getText(((io.github.zenwave360.zdl.antlr.ZdlParser.ServiceContext) ctx.getParent()).service_name());
         var methodName = getText(ctx.service_method_name());
         var location = "services." + serviceName + ".methods." + methodName;
+        var naturalId = ctx.service_method_parameter_natural() != null? true : null;
         var methodParamId = ctx.service_method_parameter_id() != null? "id" : null;
         var methodParameter = ctx.service_method_parameter() != null? ctx.service_method_parameter().getText() : null;
         var returnType = ctx.service_method_return() != null? ctx.service_method_return().ID().getText() : null;
@@ -585,6 +586,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         var method = new FluentMap()
                 .with("name", methodName)
                 .with("serviceName", serviceName)
+                .with("naturalId", naturalId)
                 .with("paramId", methodParamId)
                 .with("parameter", methodParameter)
                 .with("returnType", returnType)

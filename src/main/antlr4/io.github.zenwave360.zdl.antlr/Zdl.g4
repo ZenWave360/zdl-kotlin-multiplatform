@@ -250,8 +250,13 @@ aggregate_command_parameter: ID;
 service: javadoc? annotations SERVICE service_name FOR LPAREN service_aggregates RPAREN LBRACE service_method* RBRACE;
 service_name: ID;
 service_aggregates: ID (COMMA ID)*;
-service_method: javadoc? annotations service_method_name LPAREN service_method_parameter_id? COMMA? service_method_parameter? RPAREN service_method_return? with_events? suffix_javadoc?;
+service_method: javadoc? annotations service_method_name
+    LPAREN
+        (service_method_parameter_natural service_method_parameter_id | service_method_parameter_id)?
+        COMMA? service_method_parameter?
+    RPAREN service_method_return? with_events? suffix_javadoc?;
 service_method_name: ID;
+service_method_parameter_natural: '@natural';
 service_method_parameter_id: PARAM_ID;
 service_method_parameter: ID;
 service_method_return: ID | ID ARRAY | ID OPTIONAL;
