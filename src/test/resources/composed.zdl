@@ -1,0 +1,23 @@
+/**
+* First Global Javadoc
+*/
+config {
+    title "First Title"
+}
+
+entity OneEntity {
+    oneField String
+    secondField String
+}
+
+/**
+* Seccond Global Javadoc
+*/
+config {
+    title "Second Title"
+}
+
+entity OneEntity {
+    oneField Long
+    thirdField String
+}

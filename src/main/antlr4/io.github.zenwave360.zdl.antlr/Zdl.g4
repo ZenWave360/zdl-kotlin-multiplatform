@@ -80,6 +80,7 @@ MIN: 'min';
 MAX: 'max';
 MINLENGTH: 'minlength';
 MAXLENGTH: 'maxlength';
+EMAIL: 'email';
 PATTERN: 'pattern';
 OPTION_NAME: '@' [a-zA-Z_][a-zA-Z0-9_]*;
 
@@ -117,9 +118,9 @@ PATTERN_REGEX: '/' .*? '/' ; // TODO: improve regex
 ERRCHAR: . -> channel(HIDDEN);
 
 // Rules
-zdl: imports global_javadoc? legacy_constants config? apis? (policies | aggregate | entity | enum | input | output | event | relationships | service | service_legacy)* EOF;
+zdl: legacy_constants (import_ | config | apis | policies | aggregate | entity | enum | input | output | event | relationships | service | service_legacy)* EOF;
 
-imports: ('@import' LPAREN import_value RPAREN)*;
+import_: '@import' LPAREN import_value RPAREN;
 import_value: string;
 global_javadoc: JAVADOC;
 javadoc: JAVADOC;
@@ -128,7 +129,7 @@ suffix_javadoc: JAVADOC;
 legacy_constants: LEGACY_CONSTANT*;
 
 // values
-keyword: ID | IMPORT | CONFIG | APIS | PLUGINS | DISABLED | ASYNCAPI | OPENAPI | ENTITY | AGGREGATE | INPUT | OUTPUT | EVENT | RELATIONSHIP | SERVICE | PARAM_ID | FOR | TO | WITH_EVENTS | WITH | REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | PATTERN;
+keyword: ID | IMPORT | CONFIG | APIS | PLUGINS | DISABLED | ASYNCAPI | OPENAPI | ENTITY | AGGREGATE | INPUT | OUTPUT | EVENT | RELATIONSHIP | SERVICE | PARAM_ID | FOR | TO | WITH_EVENTS | WITH | REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | EMAIL | PATTERN;
 
 complex_value: value | array | object;
 value: simple | object;
@@ -138,7 +139,7 @@ pair: keyword COLON value;
 object: LBRACE pair (COMMA pair)* RBRACE;
 array: LBRACK? value (COMMA value)* RBRACK?;
 
-config: CONFIG config_body;
+config: global_javadoc? CONFIG config_body;
 config_body: LBRACE config_option* plugins? RBRACE;
 config_option: field_name complex_value;
 
@@ -249,8 +250,13 @@ aggregate_command_parameter: ID;
 service: javadoc? annotations SERVICE service_name FOR LPAREN service_aggregates RPAREN LBRACE service_method* RBRACE;
 service_name: ID;
 service_aggregates: ID (COMMA ID)*;
-service_method: javadoc? annotations service_method_name LPAREN service_method_parameter_id? COMMA? service_method_parameter? RPAREN service_method_return? with_events? suffix_javadoc?;
+service_method: javadoc? annotations service_method_name
+    LPAREN
+        (service_method_parameter_natural service_method_parameter_id | service_method_parameter_id)?
+        COMMA? service_method_parameter?
+    RPAREN service_method_return? with_events? suffix_javadoc?;
 service_method_name: ID;
+service_method_parameter_natural: '@natural';
 service_method_parameter_id: PARAM_ID;
 service_method_parameter: ID;
 service_method_return: ID | ID ARRAY | ID OPTIONAL;
