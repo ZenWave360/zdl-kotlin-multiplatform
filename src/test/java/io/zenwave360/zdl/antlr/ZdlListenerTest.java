@@ -1,18 +1,16 @@
-package io.github.zenwave360.zdl.antlr;
+package io.zenwave360.zdl.antlr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.zenwave360.zdl.ZdlParser;
+import io.zenwave360.zdl.ZdlParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import static io.github.zenwave360.zdl.antlr.JSONPath.get;
+import static io.zenwave360.zdl.antlr.JSONPath.get;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

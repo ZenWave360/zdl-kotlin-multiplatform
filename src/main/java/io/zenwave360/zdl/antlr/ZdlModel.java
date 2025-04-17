@@ -1,4 +1,4 @@
-package io.github.zenwave360.zdl.antlr;
+package io.zenwave360.zdl.antlr;
 
 import java.util.ArrayList;
 import java.util.Comparator;

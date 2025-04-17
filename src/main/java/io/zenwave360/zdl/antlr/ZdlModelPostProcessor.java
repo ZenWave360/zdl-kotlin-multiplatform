@@ -1,7 +1,4 @@
-package io.github.zenwave360.zdl.antlr;
-
-import io.github.zenwave360.zdl.antlr.JSONPath;
-import io.github.zenwave360.zdl.antlr.ZdlModel;
+package io.zenwave360.zdl.antlr;
 
 import java.util.HashMap;
 import java.util.List;

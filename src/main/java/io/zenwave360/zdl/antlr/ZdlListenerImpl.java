@@ -1,4 +1,4 @@
-package io.github.zenwave360.zdl.antlr;
+package io.zenwave360.zdl.antlr;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -6,32 +6,28 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.camelCase;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.createCRUDMethods;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.first;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getArray;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getComplexValue;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getLocations;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getObject;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getOptionValue;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getText;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.getValueText;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.javadoc;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.kebabCase;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.lowerCamelCase;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.pluralize;
-import static io.github.zenwave360.zdl.antlr.ZdlListenerUtils.snakeCase;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.camelCase;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.createCRUDMethods;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.first;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.getArray;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.getComplexValue;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.getLocations;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.getOptionValue;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.getText;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.getValueText;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.javadoc;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.kebabCase;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.lowerCamelCase;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.pluralize;
+import static io.zenwave360.zdl.antlr.ZdlListenerUtils.snakeCase;
 
-public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListener {
+public class ZdlListenerImpl extends ZdlBaseListener {
 
     ZdlModel model = new ZdlModel();
     Stack<FluentMap> currentStack = new Stack<>();
@@ -42,39 +38,39 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterZdl(io.github.zenwave360.zdl.antlr.ZdlParser.ZdlContext ctx) {
+    public void enterZdl(ZdlParser.ZdlContext ctx) {
 
     }
 
     @Override
-    public void enterSuffix_javadoc(io.github.zenwave360.zdl.antlr.ZdlParser.Suffix_javadocContext ctx) {
+    public void enterSuffix_javadoc(ZdlParser.Suffix_javadocContext ctx) {
         super.enterSuffix_javadoc(ctx);
     }
 
     @Override
-    public void enterGlobal_javadoc(io.github.zenwave360.zdl.antlr.ZdlParser.Global_javadocContext ctx) {
+    public void enterGlobal_javadoc(ZdlParser.Global_javadocContext ctx) {
         model.put("javadoc", javadoc(ctx));
     }
 
     @Override
-    public void enterLegacy_constants(io.github.zenwave360.zdl.antlr.ZdlParser.Legacy_constantsContext ctx) {
+    public void enterLegacy_constants(ZdlParser.Legacy_constantsContext ctx) {
         ctx.LEGACY_CONSTANT().stream().map(TerminalNode::getText).map(c -> c.split(" *= *")).forEach(c -> model.appendTo("constants", c[0], c[1]));
     }
 
     @Override
-    public void enterImport_(io.github.zenwave360.zdl.antlr.ZdlParser.Import_Context ctx) {
+    public void enterImport_(ZdlParser.Import_Context ctx) {
         model.appendToList("imports", getValueText(ctx.import_value().string()));
     }
 
     @Override
-    public void enterConfig_option(io.github.zenwave360.zdl.antlr.ZdlParser.Config_optionContext ctx) {
+    public void enterConfig_option(ZdlParser.Config_optionContext ctx) {
         var name = ctx.field_name().getText();
         var value = getComplexValue(ctx.complex_value());
         model.appendTo("config", name, value);
     }
 
     @Override
-    public void enterApi(io.github.zenwave360.zdl.antlr.ZdlParser.ApiContext ctx) {
+    public void enterApi(ZdlParser.ApiContext ctx) {
         var name = getText(ctx.api_name());
         var type = getText(ctx.api_type());
         var role = getText(ctx.api_role(), "provider");
@@ -99,19 +95,19 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterApi_config(io.github.zenwave360.zdl.antlr.ZdlParser.Api_configContext ctx) {
+    public void enterApi_config(ZdlParser.Api_configContext ctx) {
         var name = ctx.field_name().getText();
         var value = getComplexValue(ctx.complex_value());
         currentStack.peek().appendTo("config", name, value);
     }
 
     @Override
-    public void exitApi(io.github.zenwave360.zdl.antlr.ZdlParser.ApiContext ctx) {
+    public void exitApi(ZdlParser.ApiContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterPlugin(io.github.zenwave360.zdl.antlr.ZdlParser.PluginContext ctx) {
+    public void enterPlugin(ZdlParser.PluginContext ctx) {
         var name = getText(ctx.plugin_name());
         var javadoc = javadoc(ctx.javadoc());
         var disabled = ctx.plugin_disabled().DISABLED() != null;
@@ -140,35 +136,35 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterPlugin_config_option(io.github.zenwave360.zdl.antlr.ZdlParser.Plugin_config_optionContext ctx) {
+    public void enterPlugin_config_option(ZdlParser.Plugin_config_optionContext ctx) {
         var name = getText(ctx.field_name());
         var value = getComplexValue(ctx.complex_value());
         currentStack.peek().appendTo("config", name, value);
     }
 
     @Override
-    public void enterPlugin_config_cli_option(io.github.zenwave360.zdl.antlr.ZdlParser.Plugin_config_cli_optionContext ctx) {
+    public void enterPlugin_config_cli_option(ZdlParser.Plugin_config_cli_optionContext ctx) {
         var keyword = getText(ctx.keyword());
         var value = getText(ctx.simple());
         currentStack.peek().appendTo("cliOptions", keyword, value);
     }
 
     @Override
-    public void exitPlugin(io.github.zenwave360.zdl.antlr.ZdlParser.PluginContext ctx) {
+    public void exitPlugin(ZdlParser.PluginContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterPolicie_body(io.github.zenwave360.zdl.antlr.ZdlParser.Policie_bodyContext ctx) {
+    public void enterPolicie_body(ZdlParser.Policie_bodyContext ctx) {
         var name = getText(ctx.policie_name());
         var value = ctx.policie_value() != null? getValueText(ctx.policie_value().simple()) : null;
-        var aggregate = ((io.github.zenwave360.zdl.antlr.ZdlParser.PoliciesContext) ctx.getParent().getParent()).policy_aggregate();
+        var aggregate = ((ZdlParser.PoliciesContext) ctx.getParent().getParent()).policy_aggregate();
         model.appendTo("policies", new FluentMap().with(name, new FluentMap().with("name", name).with("value", value).with("aggregate", aggregate)));
         super.enterPolicie_body(ctx);
     }
 
     @Override
-    public void enterEntity(io.github.zenwave360.zdl.antlr.ZdlParser.EntityContext ctx) {
+    public void enterEntity(ZdlParser.EntityContext ctx) {
         var entity = ctx.entity_definition();
         var name = entity.entity_name().getText();
         var javadoc = javadoc(ctx.javadoc());
@@ -185,7 +181,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitEntity(io.github.zenwave360.zdl.antlr.ZdlParser.EntityContext ctx) {
+    public void exitEntity(ZdlParser.EntityContext ctx) {
         currentStack.pop();
     }
 
@@ -209,7 +205,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterOption(io.github.zenwave360.zdl.antlr.ZdlParser.OptionContext ctx) {
+    public void enterOption(ZdlParser.OptionContext ctx) {
 //        var name = ctx.reserved_option() != null? ctx.reserved_option().getText().replace("@", "") : getText(ctx.option_name());
         var name = ctx.option_name().getText().replace("@", "");
         var value = getOptionValue(ctx.option_value());
@@ -221,7 +217,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterField(io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext ctx) {
+    public void enterField(ZdlParser.FieldContext ctx) {
         var name = getText(ctx.field_name());
         var type = ctx.field_type() != null && ctx.field_type().ID() != null? ctx.field_type().ID().getText() : null;
         var initialValue = ctx.field_initialization() != null && ctx.field_initialization().field_initial_value() != null? getValueText(ctx.field_initialization().field_initial_value().simple()) : null;
@@ -276,14 +272,14 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitField(io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext ctx) {
+    public void exitField(ZdlParser.FieldContext ctx) {
         currentStack.pop();
         super.exitField(ctx);
     }
 
     @Override
-    public void enterNested_field(io.github.zenwave360.zdl.antlr.ZdlParser.Nested_fieldContext ctx) {
-        ZdlParser.FieldContext parent = (io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext) ctx.getParent();
+    public void enterNested_field(ZdlParser.Nested_fieldContext ctx) {
+        ZdlParser.FieldContext parent = (ZdlParser.FieldContext) ctx.getParent();
         var parentEntity = currentStack.get(currentStack.size() - 2); // currentStack.peek();
         var parentEntityFields = ((FluentMap) parentEntity.get("fields"));
         var parentField = new ArrayList<>(parentEntityFields.values()).get(parentEntityFields.size() - 1);
@@ -313,7 +309,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         return new int[]{ startLocation[0], endLocation[1], startLocation[2], startLocation[3], endLocation[4], endLocation[5] };
     }
 
-    private Map<String, Object> processNestedFieldValidations(List<io.github.zenwave360.zdl.antlr.ZdlParser.Nested_field_validationsContext> field_validations) {
+    private Map<String, Object> processNestedFieldValidations(List<ZdlParser.Nested_field_validationsContext> field_validations) {
         var validations = new FluentMap();
         if(field_validations != null) {
             field_validations.forEach(v -> {
@@ -326,12 +322,12 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitNested_field(io.github.zenwave360.zdl.antlr.ZdlParser.Nested_fieldContext ctx) {
+    public void exitNested_field(ZdlParser.Nested_fieldContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterEnum(io.github.zenwave360.zdl.antlr.ZdlParser.EnumContext ctx) {
+    public void enterEnum(ZdlParser.EnumContext ctx) {
         var name = getText(ctx.enum_name());
         var javadoc = javadoc(ctx.javadoc());
         currentStack.push(new FluentMap()
@@ -349,12 +345,12 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitEnum(io.github.zenwave360.zdl.antlr.ZdlParser.EnumContext ctx) {
+    public void exitEnum(ZdlParser.EnumContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterEnum_value(io.github.zenwave360.zdl.antlr.ZdlParser.Enum_valueContext ctx) {
+    public void enterEnum_value(ZdlParser.Enum_valueContext ctx) {
         var name = getText(ctx.enum_value_name());
         var javadoc = javadoc(first(ctx.javadoc(), ctx.suffix_javadoc()));
         var value = getText(ctx.enum_value_value());
@@ -370,8 +366,8 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterRelationship(io.github.zenwave360.zdl.antlr.ZdlParser.RelationshipContext ctx) {
-        var parent = (io.github.zenwave360.zdl.antlr.ZdlParser.RelationshipsContext) ctx.parent;
+    public void enterRelationship(ZdlParser.RelationshipContext ctx) {
+        var parent = (ZdlParser.RelationshipsContext) ctx.parent;
         var relationshipType = parent.relationship_type().getText();
         var relationshipName = removeJavadoc(relationshipType + "_" + relationshipDescription(ctx.relationship_from().relationship_definition()) + "_" + relationshipDescription(ctx.relationship_to().relationship_definition()));
 
@@ -430,12 +426,12 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         model.getRelationships().appendTo(relationshipType, relationshipName, relationship);
     }
 
-    private boolean isRequired(io.github.zenwave360.zdl.antlr.ZdlParser.Relationship_definitionContext relationshipDefinitionContext) {
+    private boolean isRequired(ZdlParser.Relationship_definitionContext relationshipDefinitionContext) {
         return relationshipDefinitionContext.relationship_field_validations() != null
                 && relationshipDefinitionContext.relationship_field_validations().relationship_field_required() != null;
     }
 
-    private Object relationshipValidations(io.github.zenwave360.zdl.antlr.ZdlParser.Relationship_definitionContext relationshipDefinitionContext) {
+    private Object relationshipValidations(ZdlParser.Relationship_definitionContext relationshipDefinitionContext) {
         var validations = new FluentMap();
         if (relationshipDefinitionContext.relationship_field_validations() != null) {
             if (relationshipDefinitionContext.relationship_field_validations().relationship_field_required() != null) {
@@ -463,7 +459,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         return text.replaceAll(regex, "");
     }
 
-    private String relationshipDescription(io.github.zenwave360.zdl.antlr.ZdlParser.Relationship_definitionContext ctx) {
+    private String relationshipDescription(ZdlParser.Relationship_definitionContext ctx) {
         var description = "";
         if(ctx != null) {
             description = description + getText(ctx.relationship_entity_name());
@@ -474,14 +470,14 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         return description;
     }
 
-    private Map<String, Object> relationshipOptions(List<io.github.zenwave360.zdl.antlr.ZdlParser.OptionContext> options) {
+    private Map<String, Object> relationshipOptions(List<ZdlParser.OptionContext> options) {
         return options.stream().collect(Collectors.toMap(o ->
                 getText(o.option_name()).replace("@", ""),
                 o -> getOptionValue(o.option_value())));
     }
 
     @Override
-    public void enterService_legacy(io.github.zenwave360.zdl.antlr.ZdlParser.Service_legacyContext ctx) {
+    public void enterService_legacy(ZdlParser.Service_legacyContext ctx) {
         var serviceName = ctx.ID().getText();
         String serviceJavadoc = "Legacy service";
         var serviceAggregates = getArray(ctx.service_aggregates(), ",");
@@ -498,12 +494,12 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitService_legacy(io.github.zenwave360.zdl.antlr.ZdlParser.Service_legacyContext ctx) {
+    public void exitService_legacy(ZdlParser.Service_legacyContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterAggregate(io.github.zenwave360.zdl.antlr.ZdlParser.AggregateContext ctx) {
+    public void enterAggregate(ZdlParser.AggregateContext ctx) {
         var aggregateName = getText(ctx.aggregate_name());
         var javadoc = javadoc(ctx.javadoc());
         var aggregateRoot = getText(ctx.aggregate_root());
@@ -525,13 +521,13 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitAggregate(io.github.zenwave360.zdl.antlr.ZdlParser.AggregateContext ctx) {
+    public void exitAggregate(ZdlParser.AggregateContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterAggregate_command(io.github.zenwave360.zdl.antlr.ZdlParser.Aggregate_commandContext ctx) {
-        var aggregateName = getText(((io.github.zenwave360.zdl.antlr.ZdlParser.AggregateContext) ctx.getParent()).aggregate_name());
+    public void enterAggregate_command(ZdlParser.Aggregate_commandContext ctx) {
+        var aggregateName = getText(((ZdlParser.AggregateContext) ctx.getParent()).aggregate_name());
         var commandName = getText(ctx.aggregate_command_name());
         var location = "aggregates." + aggregateName + ".commands." + commandName;
         var parameter = ctx.aggregate_command_parameter() != null? ctx.aggregate_command_parameter().getText() : null;
@@ -554,12 +550,12 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitAggregate_command(io.github.zenwave360.zdl.antlr.ZdlParser.Aggregate_commandContext ctx) {
+    public void exitAggregate_command(ZdlParser.Aggregate_commandContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterService(io.github.zenwave360.zdl.antlr.ZdlParser.ServiceContext ctx) {
+    public void enterService(ZdlParser.ServiceContext ctx) {
         var serviceName = getText(ctx.service_name());
         var serviceJavadoc = javadoc(ctx.javadoc());
         var serviceAggregates = getArray(ctx.service_aggregates(), ",");
@@ -580,13 +576,13 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitService(io.github.zenwave360.zdl.antlr.ZdlParser.ServiceContext ctx) {
+    public void exitService(ZdlParser.ServiceContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterService_method(io.github.zenwave360.zdl.antlr.ZdlParser.Service_methodContext ctx) {
-        var serviceName = getText(((io.github.zenwave360.zdl.antlr.ZdlParser.ServiceContext) ctx.getParent()).service_name());
+    public void enterService_method(ZdlParser.Service_methodContext ctx) {
+        var serviceName = getText(((ZdlParser.ServiceContext) ctx.getParent()).service_name());
         var methodName = getText(ctx.service_method_name());
         var location = "services." + serviceName + ".methods." + methodName;
         var naturalId = ctx.service_method_parameter_natural() != null? true : null;
@@ -620,11 +616,11 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitService_method(io.github.zenwave360.zdl.antlr.ZdlParser.Service_methodContext ctx) {
+    public void exitService_method(ZdlParser.Service_methodContext ctx) {
         currentStack.pop();
     }
 
-    private List<Object> getServiceMethodEvents(String location, io.github.zenwave360.zdl.antlr.ZdlParser.With_eventsContext ctx) {
+    private List<Object> getServiceMethodEvents(String location, ZdlParser.With_eventsContext ctx) {
         model.setLocation(location + ".withEvents", getLocations(ctx));
         var events = new ArrayList<>();
         if (ctx != null) {
@@ -653,7 +649,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void enterEvent(io.github.zenwave360.zdl.antlr.ZdlParser.EventContext ctx) {
+    public void enterEvent(ZdlParser.EventContext ctx) {
         var name = ctx.event_name().getText();
         var javadoc = javadoc(ctx.javadoc());
         var kebabCase = kebabCase(name);
@@ -670,7 +666,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitEvent(io.github.zenwave360.zdl.antlr.ZdlParser.EventContext ctx) {
+    public void exitEvent(ZdlParser.EventContext ctx) {
         currentStack.pop();
     }
 
@@ -685,7 +681,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 //    }
 
     @Override
-    public void enterInput(io.github.zenwave360.zdl.antlr.ZdlParser.InputContext ctx) {
+    public void enterInput(ZdlParser.InputContext ctx) {
         var name = ctx.input_name().getText();
         var javadoc = javadoc(ctx.javadoc());
         currentStack.push(processEntity(name, javadoc, null).with("type", "inputs"));
@@ -694,12 +690,12 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitInput(io.github.zenwave360.zdl.antlr.ZdlParser.InputContext ctx) {
+    public void exitInput(ZdlParser.InputContext ctx) {
         currentStack.pop();
     }
 
     @Override
-    public void enterOutput(io.github.zenwave360.zdl.antlr.ZdlParser.OutputContext ctx) {
+    public void enterOutput(ZdlParser.OutputContext ctx) {
         var name = ctx.output_name().getText();
         var javadoc = javadoc(ctx.javadoc());
         currentStack.push(processEntity(name, javadoc, null).with("type", "outputs"));
@@ -708,7 +704,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
     }
 
     @Override
-    public void exitOutput(io.github.zenwave360.zdl.antlr.ZdlParser.OutputContext ctx) {
+    public void exitOutput(ZdlParser.OutputContext ctx) {
         currentStack.pop();
     }
 
