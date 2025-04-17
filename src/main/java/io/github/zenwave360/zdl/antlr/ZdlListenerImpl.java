@@ -252,12 +252,15 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
         model.setLocation(entityLocation, getLocations(ctx));
         model.setLocation(entityLocation + ".name", getLocations(ctx.field_name()));
         model.setLocation(entityLocation + ".type", getLocations(ctx.field_type()));
+        for (var fieldValidation : ctx.field_validations()) {
+            model.setLocation(entityLocation + ".validations." + getText(fieldValidation.field_validation_name()), getLocations(fieldValidation));
+        }
         model.setLocation(entityLocation + ".javadoc", getLocations(first(ctx.javadoc(), ctx.suffix_javadoc())));
 
         currentStack.push(field);
     }
 
-    private Map<String, Object> processFieldValidations(List<io.github.zenwave360.zdl.antlr.ZdlParser.Field_validationsContext> field_validations) {
+    private Map<String, Object> processFieldValidations(List<ZdlParser.Field_validationsContext> field_validations) {
         var validations = new FluentMap();
         if(field_validations != null) {
             field_validations.forEach(v -> {
@@ -280,7 +283,7 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
 
     @Override
     public void enterNested_field(io.github.zenwave360.zdl.antlr.ZdlParser.Nested_fieldContext ctx) {
-        io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext parent = (io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext) ctx.getParent();
+        ZdlParser.FieldContext parent = (io.github.zenwave360.zdl.antlr.ZdlParser.FieldContext) ctx.getParent();
         var parentEntity = currentStack.get(currentStack.size() - 2); // currentStack.peek();
         var parentEntityFields = ((FluentMap) parentEntity.get("fields"));
         var parentField = new ArrayList<>(parentEntityFields.values()).get(parentEntityFields.size() - 1);
@@ -296,6 +299,18 @@ public class ZdlListenerImpl extends io.github.zenwave360.zdl.antlr.ZdlBaseListe
             currentStack.peek().appendTo("options", (String) entry.getKey(), entry.getValue());
         }
         model.appendTo(currentCollection, entityName, currentStack.peek());
+
+        var entityLocation = currentCollection + "." + entityName;
+        var startLocation = getLocations(parent.field_type());
+        var endLocation = getLocations(ctx);
+        model.setLocation(entityLocation, mergeLocations(startLocation, endLocation));
+        model.setLocation(entityLocation + ".name", getLocations(parent.field_type()));
+        model.setLocation(entityLocation + ".tableName", getLocations(parent.entity_table_name()));
+        model.setLocation(entityLocation + ".body", getLocations(ctx));
+    }
+
+    private int[] mergeLocations(int[] startLocation, int[] endLocation) {
+        return new int[]{ startLocation[0], endLocation[1], startLocation[2], startLocation[3], endLocation[4], endLocation[5] };
     }
 
     private Map<String, Object> processNestedFieldValidations(List<io.github.zenwave360.zdl.antlr.ZdlParser.Nested_field_validationsContext> field_validations) {

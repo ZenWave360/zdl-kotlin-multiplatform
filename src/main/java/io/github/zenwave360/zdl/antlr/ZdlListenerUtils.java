@@ -90,10 +90,23 @@ class ZdlListenerUtils {
         if(complex_value == null) {
             return true;
         }
-        var value = getValueText(complex_value.value());
-        var array = getArray(complex_value.array());
-        var object = getObject(complex_value.object());
-        return first(value, array, object, true);
+        if(complex_value.value() != null) {
+            return getValue(complex_value.value());
+        } else {
+            var array = getArrayPlain(complex_value.array_plain());
+            var object = getObjectFromPairs(complex_value.pairs());
+            return first(array, object, true);
+        }
+    }
+
+    static Object getValue(ZdlParser.ValueContext value) {
+        if(value == null) {
+            return true;
+        }
+        var object = getObject(value.object());
+        var array = getArray(value.array());
+        var simple = getValueText(value.simple());
+        return first(object, array, simple, true);
     }
 
     static String unquote(String text, String quote) {
@@ -109,7 +122,16 @@ class ZdlListenerUtils {
             return null;
         }
         var map = new FluentMap();
-        ctx.pair().forEach(pair -> map.put(pair.keyword().getText(), getValueText(pair.value()))); // TODO: consider nested objects
+        ctx.pair().forEach(pair -> map.put(getValueText(pair.string()).toString(), getValue(pair.value()))); // TODO: consider nested objects
+        return map;
+    }
+
+    static Object getObjectFromPairs(ZdlParser.PairsContext ctx) {
+        if(ctx == null) {
+            return null;
+        }
+        var map = new FluentMap();
+        ctx.pair().forEach(pair -> map.put(getValueText(pair.string()).toString(), getValue(pair.value()))); // TODO: consider nested objects
         return map;
     }
 
@@ -118,7 +140,16 @@ class ZdlListenerUtils {
             return null;
         }
         var list = new ArrayList<>();
-        ctx.value().forEach(value -> list.add(getValueText(value)));
+        ctx.value().forEach(value -> list.add(getValue(value)));
+        return list;
+    }
+
+    static Object getArrayPlain(io.github.zenwave360.zdl.antlr.ZdlParser.Array_plainContext ctx) {
+        if(ctx == null) {
+            return null;
+        }
+        var list = new ArrayList<>();
+        ctx.simple().forEach(value -> list.add(getValueText(value)));
         return list;
     }
 
@@ -178,7 +209,7 @@ class ZdlListenerUtils {
             stopCharOffset = ctx.getText().length();
         }
         // range in chars, range in lines and columns
-        return new int[] { ctx.start.getStartIndex(), ctx.start.getStopIndex() + 1, ctx.start.getLine(), ctx.start.getCharPositionInLine(), ctx.stop.getLine(), ctx.stop.getCharPositionInLine() + stopCharOffset };
+        return new int[] { ctx.start.getStartIndex(), ctx.stop.getStopIndex() + 1, ctx.start.getLine(), ctx.start.getCharPositionInLine(), ctx.stop.getLine(), ctx.stop.getCharPositionInLine() + stopCharOffset };
     }
 
 
