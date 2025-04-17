@@ -1,7 +1,7 @@
-package io.github.zenwave360.zdl.antlr;
+package io.zenwave360.zdl.antlr;
 
-import io.github.zenwave360.zdl.antlr.ZdlParser.Complex_valueContext;
-import io.github.zenwave360.zdl.antlr.ZdlParser.Option_valueContext;
+import io.zenwave360.zdl.antlr.ZdlParser.Complex_valueContext;
+import io.zenwave360.zdl.antlr.ZdlParser.Option_valueContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.math.BigDecimal;
@@ -22,7 +22,7 @@ class ZdlListenerUtils {
         return ctx != null? ctx.getText() : defaultValue;
     }
 
-    static Object getValueText(io.github.zenwave360.zdl.antlr.ZdlParser.ValueContext ctx) {
+    static Object getValueText(ZdlParser.ValueContext ctx) {
         if(ctx == null) {
             return null;
         }
@@ -35,7 +35,7 @@ class ZdlListenerUtils {
         return getText(ctx);
     }
 
-    static Object getValueText(io.github.zenwave360.zdl.antlr.ZdlParser.StringContext ctx) {
+    static Object getValueText(ZdlParser.StringContext ctx) {
         if(ctx == null) {
             return null;
         }
@@ -52,7 +52,7 @@ class ZdlListenerUtils {
     }
 
 
-    static Object getValueText(io.github.zenwave360.zdl.antlr.ZdlParser.SimpleContext ctx) {
+    static Object getValueText(ZdlParser.SimpleContext ctx) {
         if(ctx == null) {
             return null;
         }
@@ -117,7 +117,7 @@ class ZdlListenerUtils {
                 .replaceAll(quote + "$", "");
     }
 
-    static Object getObject(io.github.zenwave360.zdl.antlr.ZdlParser.ObjectContext ctx) {
+    static Object getObject(ZdlParser.ObjectContext ctx) {
         if(ctx == null) {
             return null;
         }
@@ -135,7 +135,7 @@ class ZdlListenerUtils {
         return map;
     }
 
-    static Object getArray(io.github.zenwave360.zdl.antlr.ZdlParser.ArrayContext ctx) {
+    static Object getArray(ZdlParser.ArrayContext ctx) {
         if(ctx == null) {
             return null;
         }
@@ -144,7 +144,7 @@ class ZdlListenerUtils {
         return list;
     }
 
-    static Object getArrayPlain(io.github.zenwave360.zdl.antlr.ZdlParser.Array_plainContext ctx) {
+    static Object getArrayPlain(ZdlParser.Array_plainContext ctx) {
         if(ctx == null) {
             return null;
         }

@@ -1,13 +1,11 @@
-package io.github.zenwave360.zdl.antlr;
-
-import io.github.zenwave360.zdl.ZdlParser;
+package io.zenwave360.zdl.antlr;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static io.github.zenwave360.zdl.ZdlParser.STANDARD_FIELD_TYPES;
+import static io.zenwave360.zdl.ZdlParser.STANDARD_FIELD_TYPES;
 
 public class ZdlModelValidator {
 

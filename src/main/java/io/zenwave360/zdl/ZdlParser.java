@@ -1,10 +1,10 @@
-package io.github.zenwave360.zdl;
+package io.zenwave360.zdl;
 
-import io.github.zenwave360.zdl.antlr.ZdlLexer;
-import io.github.zenwave360.zdl.antlr.ZdlListenerImpl;
-import io.github.zenwave360.zdl.antlr.ZdlModel;
-import io.github.zenwave360.zdl.antlr.ZdlModelPostProcessor;
-import io.github.zenwave360.zdl.antlr.ZdlModelValidator;
+import io.zenwave360.zdl.antlr.ZdlLexer;
+import io.zenwave360.zdl.antlr.ZdlListenerImpl;
+import io.zenwave360.zdl.antlr.ZdlModel;
+import io.zenwave360.zdl.antlr.ZdlModelPostProcessor;
+import io.zenwave360.zdl.antlr.ZdlModelValidator;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -13,8 +13,6 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class ZdlParser {
 
@@ -36,7 +34,7 @@ public class ZdlParser {
         CharStream zdl = CharStreams.fromString(model);
         ZdlLexer lexer = new ZdlLexer(zdl);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
-        io.github.zenwave360.zdl.antlr.ZdlParser parser = new io.github.zenwave360.zdl.antlr.ZdlParser(tokens);
+        io.zenwave360.zdl.antlr.ZdlParser parser = new io.zenwave360.zdl.antlr.ZdlParser(tokens);
         ParseTree tree = parser.zdl();
         ParseTreeWalker walker = new ParseTreeWalker();
         ZdlListenerImpl listener = new ZdlListenerImpl();
