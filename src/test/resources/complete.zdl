@@ -83,7 +83,7 @@ entity CustomerOrder {
     status OrderStatus = OrderStatus.RECEIVED required
     @auditing @ref
     customerDetails Customer(customer_table) {
-      customerId String required
+      customerId String  required
       firstName String required
       lastName String required
       email String required
@@ -158,8 +158,9 @@ relationship ManyToMany {
 
 @array_annotation(item1, item2, item3)
 @array2_annotation([item1, item2, item3])
-@object_annotation({item1: value, item2: value, item3: value})
-//TODO: support this -> @object_annotation({item1: value, item2: value, item3: [value1, value2]})
+@object_annotation({item1: value1, item2: value2, item3: value3})
+@object_annotation_pairs(item1: value1, item2: value2, item3: value3)
+@object_annotation_nested_array({item1: value1, item2: value2, item3: [value1, value2]})
 input CustomerOrderInput {
     orderTime Instant
     status OrderStatus

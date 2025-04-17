@@ -1,6 +1,7 @@
 package io.github.zenwave360.zdl.antlr;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -92,4 +93,20 @@ public class ZdlModel extends FluentMap {
         return JSONPath.get(this, "$.locations.['" + path + "']");
     }
 
+    public String getLocation(int line, int character) {
+        var locations = getLocations().entrySet().stream().filter(k -> {
+            var position = (int[]) k.getValue();
+            var lineStart = position[2];
+            var characterStart = position[3];
+            var lineEnd = position[4];
+            var characterEnd = position[5];
+            return lineStart <= line && line <= lineEnd && (line != lineStart || characterStart <= character) && (line != lineEnd || character <= characterEnd);
+        }).toList();
+        // return the one with the closer location which is the one with the smaller range
+        var location = locations.stream().min(Comparator.comparingInt(k -> {
+            var position = (int[]) k.getValue();
+            return position[1] - position[0];
+        })).map(Map.Entry::getKey).orElse(null);
+        return location;
+    }
 }

@@ -131,13 +131,25 @@ legacy_constants: LEGACY_CONSTANT*;
 // values
 keyword: ID | IMPORT | CONFIG | APIS | PLUGINS | DISABLED | ASYNCAPI | OPENAPI | ENTITY | AGGREGATE | INPUT | OUTPUT | EVENT | RELATIONSHIP | SERVICE | PARAM_ID | FOR | TO | WITH_EVENTS | WITH | REQUIRED | UNIQUE | MIN | MAX | MINLENGTH | MAXLENGTH | EMAIL | PATTERN;
 
-complex_value: value | array | object;
-value: simple | object;
+//complex_value: value | array | object;
+//value: simple | object;
+//string: keyword | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING;
+//simple: keyword | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL;
+//pair: keyword COLON value;
+//object: LBRACE pair (COMMA pair)* RBRACE;
+//array: LBRACK? value (COMMA value)* RBRACK?;
+
+complex_value : value | array_plain | pairs;
+value: object| array | simple;
 string: keyword | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING;
-simple: keyword | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL;
-pair: keyword COLON value;
-object: LBRACE pair (COMMA pair)* RBRACE;
-array: LBRACK? value (COMMA value)* RBRACK?;
+simple: ID | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING | INT | NUMBER | TRUE | FALSE | NULL | keyword;
+object: LBRACE pair (COMMA pair)* RBRACE
+      | LBRACE RBRACE;
+pair: string COLON value;
+array: LBRACK value (COMMA value)* RBRACK
+     | LBRACK RBRACK;
+array_plain: simple (COMMA simple)*;
+pairs: pair (COMMA pair)*;
 
 config: global_javadoc? CONFIG config_body;
 config_body: LBRACE config_option* plugins? RBRACE;

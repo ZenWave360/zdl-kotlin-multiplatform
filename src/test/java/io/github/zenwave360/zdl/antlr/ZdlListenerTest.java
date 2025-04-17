@@ -5,6 +5,7 @@ import io.github.zenwave360.zdl.ZdlParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -25,13 +26,37 @@ public class ZdlListenerTest {
     @Test
     public void parseZdl_SuffixJavadoc() throws Exception {
         ZdlModel model = parseZdl("src/test/resources/suffix_javadoc.zdl");
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+//        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
 
     @Test
     public void parseZdl_Composed() throws Exception {
         ZdlModel model = parseZdl("src/test/resources/composed.zdl");
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+//        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+    }
+
+    @Test
+    public void getFindLocation() throws Exception {
+        ZdlModel model = parseZdl("src/test/resources/complete.zdl");
+        String location = null;
+        location = model.getLocation(86, 12);
+        assertEquals("entities.Customer.fields.customerId.name", location);
+        location = model.getLocation(86, 20);
+        assertEquals("entities.Customer.fields.customerId.type", location);
+        location = model.getLocation(86, 30);
+        assertEquals("entities.Customer.fields.customerId.validations.required", location);
+
+        location = model.getLocation(86, 25);
+        assertEquals("entities.Customer.fields.customerId.validations.required", location);
+
+        location = model.getLocation(86, 33);
+        assertEquals("entities.Customer.fields.customerId.validations.required", location);
+
+        location = model.getLocation(86, 34);
+        assertEquals("entities.Customer.body", location);
+
+//        location = model.getLocation(91, 20);
+//        assertEquals("entities.Customer.fields.avatar", location);
     }
 
 
@@ -146,7 +171,15 @@ public class ZdlListenerTest {
         assertEquals("/search", get(model, "$.services.OrdersService.methods.searchOrders.options.post.path"));
         assertEquals("String", get(model, "$.services.OrdersService.methods.searchOrders.options.post.params.param1"));
 
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+        // ANNOTATIONS
+        assertEquals("item1", get(model, "$.inputs.CustomerOrderInput.options.array_annotation[0]"));
+        assertEquals("item1", get(model, "$.inputs.CustomerOrderInput.options.array2_annotation[0]"));
+        assertEquals("value1", get(model, "$.inputs.CustomerOrderInput.options.object_annotation.item1"));
+        assertEquals("value1", get(model, "$.inputs.CustomerOrderInput.options.object_annotation_pairs.item1"));
+        assertEquals("value2", get(model, "$.inputs.CustomerOrderInput.options.object_annotation_nested_array.item3[1]"));
+
+
+//        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
 
     @Test
@@ -167,7 +200,7 @@ public class ZdlListenerTest {
         ZdlModel model = parseZdl("src/test/resources/problems.zdl");
         var problems = get(model, "$.problems", List.of());
         assertEquals(15, problems.size());
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+//        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
 
     @Test
@@ -176,7 +209,7 @@ public class ZdlListenerTest {
         ZdlModel model = parseZdl("src/test/resources/problems.zdl", List.of("OrderStatusX"));
         var problems = get(model, "$.problems", List.of());
         assertEquals(13, problems.size());
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+//        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
 
     @Test
@@ -184,7 +217,7 @@ public class ZdlListenerTest {
 
         ZdlModel model = parseZdl("src/test/resources/policies.zdl");
 
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+//        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
 
     @Test
@@ -192,7 +225,7 @@ public class ZdlListenerTest {
 
         ZdlModel model = parseZdl("src/test/resources/nested-fields.zdl");
 
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+//        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
 
     @Test
@@ -200,7 +233,7 @@ public class ZdlListenerTest {
 
         ZdlModel model = parseZdl("src/test/resources/nested-input-output-model.zdl");
 
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+//        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
 
     @Test
@@ -208,7 +241,7 @@ public class ZdlListenerTest {
 
         ZdlModel model = parseZdl("src/test/resources/unrecognized-tokens.zdl");
 
-        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
+//        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
 
 
