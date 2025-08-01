@@ -197,7 +197,7 @@ public class ZdlListenerTest {
 
         ZdlModel model = parseZdl("src/test/resources/problems.zdl");
         var problems = get(model, "$.problems", List.of());
-        assertEquals(15, problems.size());
+        assertEquals(14, problems.size());
 //        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
 
@@ -206,7 +206,7 @@ public class ZdlListenerTest {
 
         ZdlModel model = parseZdl("src/test/resources/problems.zdl", List.of("OrderStatusX"));
         var problems = get(model, "$.problems", List.of());
-        assertEquals(13, problems.size());
+        assertEquals(12, problems.size());
 //        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model));
     }
 

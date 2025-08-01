@@ -162,8 +162,8 @@ public class ZdlModelValidator {
                     model.addProblem(path("services", service.getKey(), "methods", methodName, "parameter"), parameter, "%s is not an entity or input");
                 }
                 var returnType = (String) JSONPath.get(method, "$.returnType");
-                if(returnType != null && !isEntity(model, returnType) && !isOutput(model, returnType)) {
-                    model.addProblem(path("services", service.getKey(), "methods", methodName, "returnType"), returnType, "%s is not an entity or output");
+                if(returnType != null && !isEntity(model, returnType) && !isInput(model, returnType) && !isOutput(model, returnType)) {
+                    model.addProblem(path("services", service.getKey(), "methods", methodName, "returnType"), returnType, "%s is not an entity, input or output");
                 }
                 List<Object> withEvents = (List) method.getOrDefault("withEvents", List.of());
                 for (int i = 0; i < withEvents.size(); i++) {
