@@ -45,7 +45,7 @@
         <junit.version>5.11.4</junit.version>
         <commons-io.version>2.18.0</commons-io.version>
         <jackson.version>2.18.2</jackson.version>
-        <commons-lang3.version>3.17.0</commons-lang3.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
