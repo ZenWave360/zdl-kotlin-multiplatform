@@ -1,20 +1,14 @@
 grammar Zdl;
 
 @parser::members {
-    public Token match(int ttype) throws RecognitionException {
-        try { // hack to not parse suffix javadoc after new lines (hidden tokens)
-            if(getRuleContext() instanceof Suffix_javadocContext) {
-                // System.out.println("RULE_suffix_javadoc");
-                int currentTokenIndex = getCurrentToken().getTokenIndex();
-                var prevToken = getTokenStream().get(currentTokenIndex - 1);
-                if(prevToken.getText().contains("\n")) {
-                    return null;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    // Kotlin port: for now, delegate to super. We can re-introduce the hack later if needed.
+    override fun match(ttype: Int): org.antlr.v4.kotlinruntime.Token {
+        return try {
+            super.match(ttype)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            super.match(ttype)
         }
-        return super.match(ttype);
     }
 }
 
@@ -268,5 +262,6 @@ with_events_event: ID;
 with_events_events_or: LBRACK with_events_event (OR with_events_event)* RBRACK;
 
 service_legacy: SERVICE service_aggregates WITH ID;
+
 
 
