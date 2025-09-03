@@ -24,6 +24,8 @@ class ZdlListenerImpl : ZdlBaseListener() {
     private val currentStack = ArrayDeque<FluentMap>()
     private var currentCollection: String? = null
 
+//    fun getModel(): ZdlModel = model
+
     override fun enterZdl(ctx: ZdlParser.ZdlContext) {}
 
     override fun enterSuffix_javadoc(ctx: ZdlParser.Suffix_javadocContext) {
@@ -46,7 +48,7 @@ class ZdlListenerImpl : ZdlBaseListener() {
     }
 
     override fun enterConfig_option(ctx: ZdlParser.Config_optionContext) {
-        val name = ctx.field_name()?.text ?: return
+        val name = ctx.field_name().text
         val value = getComplexValue(ctx.complex_value())
         model.appendTo("config", name, value)
     }
@@ -123,9 +125,9 @@ class ZdlListenerImpl : ZdlBaseListener() {
 
     override fun enterPolicie_body(ctx: ZdlParser.Policie_bodyContext) {
         val name = getText(ctx.policie_name())!!
-        val value = ctx.policie_value()?.let { getValueText(it.simple()) }
-        // Avoid accessing protected parent; store minimal info
-        model.appendTo("policies", FluentMap.build().with(name, FluentMap.build().with("name", name).with("value", value)))
+        val value = getValueText(ctx.policie_value().simple())
+        val aggregate = (ctx.getParent()?.getParent() as ZdlParser.PoliciesContext).policy_aggregate()
+        model.appendTo("policies", FluentMap.build().with(name, FluentMap.build().with("name", name).with("value", value).with("aggregate", aggregate)))
         super.enterPolicie_body(ctx)
     }
 
@@ -197,6 +199,7 @@ class ZdlListenerImpl : ZdlBaseListener() {
             .with("isEnum", isEnum)
             .with("isEntity", isEntity)
             .with("isArray", isArray)
+            .with("isComplexType", false)
             .with("options", FluentMap.build())
             .with("validations", validations)
         currentStack.last().appendTo("fields", name, field)
@@ -234,30 +237,30 @@ class ZdlListenerImpl : ZdlBaseListener() {
     }
 
     override fun enterNested_field(ctx: ZdlParser.Nested_fieldContext) {
-        val parentFieldCtx = (ctx as ParserRuleContext).getRuleContext(ZdlParser.FieldContext::class, 0) ?: throw IllegalStateException("No FieldContext parent")
-        val parentEntity = currentStack.elementAt(currentStack.size - 2)
+        val parent = ctx.getParent() as ZdlParser.FieldContext
+        val parentEntity = currentStack[currentStack.size - 2]
         val parentEntityFields = parentEntity["fields"] as FluentMap
-        val parentField = ArrayList(parentEntityFields.values).last()
-        val entityName = parentFieldCtx.field_type().ID().text
-        val entityJavadoc = javadoc(parentFieldCtx.javadoc())
-        val tableName = getText(parentFieldCtx.entity_table_name())
+        val parentField = ArrayList(parentEntityFields.values)[parentEntityFields.size - 1]
+        val entityName = parent.field_type().ID()!!.text
+        val entityJavadoc = javadoc(parent.javadoc())
+        val tableName = getText(parent.entity_table_name())
         val validations = processNestedFieldValidations(ctx.nested_field_validations())
         (parentField as FluentMap).appendTo("validations", validations)
         currentStack.addLast(processEntity(entityName, entityJavadoc, tableName).with("type", currentCollection!!.split(".")[0]))
         currentStack.last().appendTo("options", "embedded", true)
         @Suppress("UNCHECKED_CAST")
-        val parenFieldOptions = JSONPath.get(parentField, "options", mapOf<String, Any>()) as Map<String, Any>
-        for ((k, v) in parenFieldOptions.entries) {
+        val parentFieldOptions = JSONPath.get(parentField, "options", mapOf<String, Any>()) as Map<String, Any>
+        for ((k, v) in parentFieldOptions.entries) {
             currentStack.last().appendTo("options", k, v)
         }
         model.appendTo(currentCollection!!, entityName, currentStack.last())
 
         val entityLocation = "$currentCollection.$entityName"
-        val startLocation = getLocations(parentFieldCtx.field_type())
+        val startLocation = getLocations(parent.field_type())
         val endLocation = getLocations(ctx)
         model.setLocation(entityLocation, mergeLocations(startLocation, endLocation))
-        model.setLocation("$entityLocation.name", getLocations(parentFieldCtx.field_type()))
-        model.setLocation("$entityLocation.tableName", getLocations(parentFieldCtx.entity_table_name()))
+        model.setLocation("$entityLocation.name", getLocations(parent.field_type()))
+        model.setLocation("$entityLocation.tableName", getLocations(parent.entity_table_name()))
         model.setLocation("$entityLocation.body", getLocations(ctx))
     }
 
@@ -313,8 +316,8 @@ class ZdlListenerImpl : ZdlBaseListener() {
     }
 
     override fun enterRelationship(ctx: ZdlParser.RelationshipContext) {
-        val relationshipsCtx = (ctx as ParserRuleContext).getRuleContext(ZdlParser.RelationshipsContext::class, 0)
-        val relationshipType = relationshipsCtx?.relationship_type()?.text ?: ""
+        val parent = ctx.getParent() as ZdlParser.RelationshipsContext
+        val relationshipType = parent.relationship_type().text
         val relationshipName = removeJavadoc(relationshipType + "_" + relationshipDescription(ctx.relationship_from().relationship_definition()) + "_" + relationshipDescription(ctx.relationship_to().relationship_definition()))
 
         val relationship = FluentMap.build().with("type", relationshipType).with("name", relationshipName)
@@ -463,7 +466,7 @@ class ZdlListenerImpl : ZdlBaseListener() {
     override fun exitAggregate(ctx: ZdlParser.AggregateContext) { currentStack.removeLast() }
 
     override fun enterAggregate_command(ctx: ZdlParser.Aggregate_commandContext) {
-        val aggregateName = (ctx as ParserRuleContext).getRuleContext(ZdlParser.AggregateContext::class, 0)?.aggregate_name()?.text ?: ""
+        val aggregateName = getText((ctx.getParent() as ZdlParser.AggregateContext).aggregate_name())!!
         val commandName = getText(ctx.aggregate_command_name())!!
         val location = "aggregates.$aggregateName.commands.$commandName"
         val parameter = ctx.aggregate_command_parameter()?.ID()?.text
@@ -509,8 +512,7 @@ class ZdlListenerImpl : ZdlBaseListener() {
     override fun exitService(ctx: ZdlParser.ServiceContext) { currentStack.removeLast() }
 
     override fun enterService_method(ctx: ZdlParser.Service_methodContext) {
-        val serviceCtx = (ctx as ParserRuleContext).getRuleContext(ZdlParser.ServiceContext::class, 0)
-        val serviceName = serviceCtx?.service_name()?.text ?: ""
+        val serviceName = getText((ctx.getParent() as ZdlParser.ServiceContext).service_name())!!
         val methodName = getText(ctx.service_method_name())!!
         val location = "services.$serviceName.methods.$methodName"
         val naturalId = if (ctx.service_method_parameter_natural() != null) true else null
@@ -583,6 +585,26 @@ class ZdlListenerImpl : ZdlBaseListener() {
     }
 
     override fun exitEvent(ctx: ZdlParser.EventContext) { currentStack.removeLast() }
+
+    override fun enterInput(ctx: ZdlParser.InputContext) {
+        val name = ctx.input_name().text
+        val jd = javadoc(ctx.javadoc())
+        currentStack.addLast(processEntity(name, jd, null).with("type", "inputs"))
+        model.appendTo("inputs", name, currentStack.last())
+        currentCollection = "inputs"
+    }
+
+    override fun exitInput(ctx: ZdlParser.InputContext) { currentStack.removeLast() }
+
+    override fun enterOutput(ctx: ZdlParser.OutputContext) {
+        val name = ctx.output_name().text
+        val jd = javadoc(ctx.javadoc())
+        currentStack.addLast(processEntity(name, jd, null).with("type", "outputs"))
+        model.appendTo("outputs", name, currentStack.last())
+        currentCollection = "outputs"
+    }
+
+    override fun exitOutput(ctx: ZdlParser.OutputContext) { currentStack.removeLast() }
 
     override fun exitEveryRule(ctx: ParserRuleContext) { super.exitEveryRule(ctx) }
     override fun visitTerminal(node: TerminalNode) { super.visitTerminal(node) }

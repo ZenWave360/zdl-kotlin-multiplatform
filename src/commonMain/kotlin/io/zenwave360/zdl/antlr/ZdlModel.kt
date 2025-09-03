@@ -38,11 +38,9 @@ class ZdlModel(private val delegate: FluentMap = FluentMap.build()) : MutableMap
     fun getProblems(): MutableList<MutableMap<String, Any?>> =
         delegate["problems"] as MutableList<MutableMap<String, Any?>>
 
-    fun setLocation(location: String, positions: IntArray?): FluentMap {
-        if (positions == null || positions.size != 6) return getLocations()
-        val locations = getLocations()
-        locations.appendTo(location, location, positions)
-        return locations
+    fun setLocation(location: String, positions: IntArray?): ZdlModel {
+        if (positions == null || positions.size != 6) return this
+        return appendTo("locations", location, positions)
     }
 
     fun clearProblems() = getProblems().clear()
@@ -76,9 +74,7 @@ class ZdlModel(private val delegate: FluentMap = FluentMap.build()) : MutableMap
             val characterStart = position[3]
             val lineEnd = position[4]
             val characterEnd = position[5]
-            lineStart <= line && line <= lineEnd &&
-                (line != lineStart || characterStart <= character) &&
-                (line != lineEnd || character <= characterEnd)
+            lineStart <= line && line <= lineEnd && (line != lineStart || characterStart <= character) && (line != lineEnd || character <= characterEnd)
         }
         val location = entries.minByOrNull { (_, v) ->
             val pos = v as IntArray

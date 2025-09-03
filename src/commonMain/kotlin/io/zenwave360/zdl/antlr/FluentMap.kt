@@ -1,12 +1,12 @@
 package io.zenwave360.zdl.antlr
 
 class FluentMap private constructor(
-    private val backingMap: MutableMap<String, Any?>
+    private val backingMap: MutableMap<String, Any?> = linkedMapOf()
 ) : MutableMap<String, Any?> by backingMap {
 
     companion object {
         fun build(block: FluentMap.() -> Unit = {}): FluentMap =
-            FluentMap(mutableMapOf()).apply(block)
+            FluentMap(linkedMapOf()).apply(block)
     }
 
     // Provide access to underlying Java Map (useful for JSONPath on JVM)
@@ -17,12 +17,12 @@ class FluentMap private constructor(
     fun putAllEntries(map: Map<String, Any?>): FluentMap = apply { backingMap.putAll(map) }
 
     fun appendToMap(collection: String, key: String, value: Any?): FluentMap = apply {
-        val nestedMap = backingMap.getOrPut(collection) { mutableMapOf<String, Any?>() } as MutableMap<String, Any?>
+        val nestedMap = backingMap.getOrPut(collection) { linkedMapOf<String, Any?>() } as MutableMap<String, Any?>
         nestedMap[key] = value
     }
 
     fun appendToMap(collection: String, map: Map<String, Any?>): FluentMap = apply {
-        val nestedMap = backingMap.getOrPut(collection) { mutableMapOf<String, Any?>() } as MutableMap<String, Any?>
+        val nestedMap = backingMap.getOrPut(collection) { linkedMapOf<String, Any?>() } as MutableMap<String, Any?>
         nestedMap.putAll(map)
     }
 

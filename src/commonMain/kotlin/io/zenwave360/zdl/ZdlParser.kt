@@ -3,6 +3,7 @@ package io.zenwave360.zdl
 import io.zenwave360.zdl.antlr.*
 import org.antlr.v4.kotlinruntime.CharStreams
 import org.antlr.v4.kotlinruntime.CommonTokenStream
+import org.antlr.v4.kotlinruntime.tree.ParseTreeWalker
 
 class ZdlParser {
 
@@ -35,8 +36,8 @@ class ZdlParser {
         val tokens = CommonTokenStream(lexer)
         val parser = io.zenwave360.zdl.antlr.ZdlParser(tokens)
         val listener = ZdlListenerImpl()
-        parser.addParseListener(listener)
-        parser.zdl() // parsing triggers listener callbacks
+        val zdlRoot = parser.zdl()
+        ParseTreeWalker.DEFAULT.walk(listener, zdlRoot)
 
         var zdlModel = listener.model
         zdlModel = ZdlModelPostProcessor.postProcess(zdlModel)

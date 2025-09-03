@@ -1,14 +1,9 @@
 package io.zenwave360.zdl.antlr
 
 import io.zenwave360.zdl.ZdlParser
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.test.*
 
 class ZdlListenerKotlinTest {
 
@@ -46,6 +41,38 @@ class ZdlListenerKotlinTest {
 
         location = model.getLocation(86, 34)
         assertEquals("entities.Customer.body", location)
+    }
+
+    fun printMapAsJson(map: Map<String, Any?>, indent: String = ""): String {
+        return buildString {
+            append("{\n")
+            map.entries.forEachIndexed { index, (key, value) ->
+                append("$indent  \"$key\": ")
+                when (value) {
+                    is IntArray -> append(value.contentToString())
+                    is Map<*, *> -> append(printMapAsJson(value as Map<String, Any?>, "$indent  "))
+                    is List<*> -> {
+                        append("[\n")
+                        value.forEachIndexed { i, item ->
+                            append("$indent    ")
+                            when (item) {
+                                is Map<*, *> -> append(printMapAsJson(item as Map<String, Any?>, "$indent    "))
+                                else -> append("\"$item\"")
+                            }
+                            if (i < value.size - 1) append(",")
+                            append("\n")
+                        }
+                        append("$indent  ]")
+                    }
+                    is String -> append("\"$value\"")
+                    null -> append("null")
+                    else -> append("\"$value\"")
+                }
+                if (index < map.size - 1) append(",")
+                append("\n")
+            }
+            append("$indent}")
+        }
     }
 
     @Test

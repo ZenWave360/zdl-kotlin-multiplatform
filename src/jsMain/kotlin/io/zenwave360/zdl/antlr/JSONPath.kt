@@ -6,7 +6,7 @@ actual object JSONPath {
     actual fun <T> get(source: Any?, path: String, defaultValue: T?): T? =
         (get(source, path) as? T) ?: defaultValue
 
-    actual fun get(source: Any?, path: String): Any? {
+    actual fun <T> get(source: Any?, path: String): T? {
         if (source == null || path.isEmpty()) return null
         return try {
             evaluate(source, path)
@@ -15,12 +15,12 @@ actual object JSONPath {
         }
     }
 
-    private fun evaluate(source: Any?, path: String): Any? {
+    private fun <T> evaluate(source: Any?, path: String): T? {
         var current: Any? = source
         var p = path.trim()
         if (p.startsWith("$")) p = p.removePrefix("$")
         if (p.startsWith(".")) p = p.removePrefix(".")
-        if (p.isEmpty()) return current
+        if (p.isEmpty()) return current as? T
 
         val tokens = tokenize(p)
         for (t in tokens) {
@@ -31,7 +31,7 @@ actual object JSONPath {
             }
             if (current == null) return null
         }
-        return current
+        return current as? T
     }
 
     private fun getProp(obj: Any?, name: String): Any? = when (obj) {

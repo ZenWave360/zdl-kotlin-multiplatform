@@ -194,25 +194,25 @@ class ZdlModelValidator {
         fieldType != null && (standardFieldTypes.contains(fieldType) || extraFieldTypes.contains(fieldType))
 
     private fun isEntity(model: ZdlModel, entityName: String?): Boolean =
-        entityName != null && JSONPath.get(model, "$.entities.$entityName") != null
+        JSONPath.get<String>(model, "$.entities.$entityName") != null
 
     private fun isEnum(model: ZdlModel, entityName: String?): Boolean =
-        entityName != null && JSONPath.get(model, "$.enums.$entityName") != null
+        JSONPath.get<String>(model, "$.enums.$entityName") != null
 
     private fun isInput(model: ZdlModel, entityName: String?): Boolean =
-        entityName != null && JSONPath.get(model, "$.inputs.$entityName") != null
+        JSONPath.get<String>(model, "$.inputs.$entityName") != null
 
     private fun isOutput(model: ZdlModel, entityName: String?): Boolean =
-        entityName != null && JSONPath.get(model, "$.outputs.$entityName") != null
+        JSONPath.get<String>(model, "$.outputs.$entityName") != null
 
     private fun isEvent(model: ZdlModel, entityName: String?): Boolean =
-        entityName != null && JSONPath.get(model, "$.events.$entityName") != null
+        JSONPath.get<String>(model, "$.events.$entityName") != null
 
     private fun isEntityOrEnum(model: ZdlModel, entityName: String?): Boolean =
         isEntity(model, entityName) || isEnum(model, entityName)
 
     private fun isAggregate(model: ZdlModel, entityName: String?): Boolean =
-        entityName != null && (JSONPath.get(model, "$.aggregates.$entityName") != null
-                || (JSONPath.get(model, "$.entities.$entityName.options.aggregate", false) as Boolean))
+        JSONPath.get<String>(model, "$.aggregates.$entityName") != null ||
+                (JSONPath.get(model, "$.entities.$entityName.options.aggregate", false) as Boolean)
 }
 

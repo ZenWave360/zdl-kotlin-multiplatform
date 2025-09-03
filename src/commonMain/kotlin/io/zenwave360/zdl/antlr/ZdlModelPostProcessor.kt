@@ -16,6 +16,7 @@ class ZdlModelPostProcessor {
             for (field in fields) {
                 val type = field["type"]
                 if (type != null) {
+                    field["isComplexType"] = false
                     if (entities.containsKey(type)) {
                         field["isEntity"] = true
                         field["isComplexType"] = true
