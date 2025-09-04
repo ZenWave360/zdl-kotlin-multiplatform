@@ -23,16 +23,22 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
             }
         }
         val jvmMain by getting {
             dependencies {
-                implementation("com.jayway.jsonpath:json-path:2.9.0")
+//                implementation("com.jayway.jsonpath:json-path:2.9.0")
             }
         }
         val jvmTest by getting
         val jsMain by getting
-        val jsTest by getting
+        val jsTest by getting {
+            dependencies {
+                implementation(npm("fs", "0.0.1-security"))
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-node:18.16.12-pre.610")
+            }
+        }
     }
 }
 

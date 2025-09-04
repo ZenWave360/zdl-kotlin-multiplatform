@@ -1,27 +1,25 @@
 package io.zenwave360.zdl.antlr
 
 import io.zenwave360.zdl.ZdlParser
-import java.nio.file.Files
-import java.nio.file.Paths
 import kotlin.test.*
 
 class ZdlListenerKotlinTest {
 
     @Test
     fun parseZdl_SuffixJavadoc() {
-        val model = parseZdl("src/test/resources/suffix_javadoc.zdl")
+        val model = parseZdl("suffix_javadoc.zdl")
         // println(model)
     }
 
     @Test
     fun parseZdl_Composed() {
-        val model = parseZdl("src/test/resources/composed.zdl")
+        val model = parseZdl("composed.zdl")
         // println(model)
     }
 
     @Test
     fun getFindLocation() {
-        val model = parseZdl("src/test/resources/complete.zdl")
+        val model = parseZdl("complete.zdl")
         var location: String?
 
         location = model.getLocation(86, 12)
@@ -43,41 +41,9 @@ class ZdlListenerKotlinTest {
         assertEquals("entities.Customer.body", location)
     }
 
-    fun printMapAsJson(map: Map<String, Any?>, indent: String = ""): String {
-        return buildString {
-            append("{\n")
-            map.entries.forEachIndexed { index, (key, value) ->
-                append("$indent  \"$key\": ")
-                when (value) {
-                    is IntArray -> append(value.contentToString())
-                    is Map<*, *> -> append(printMapAsJson(value as Map<String, Any?>, "$indent  "))
-                    is List<*> -> {
-                        append("[\n")
-                        value.forEachIndexed { i, item ->
-                            append("$indent    ")
-                            when (item) {
-                                is Map<*, *> -> append(printMapAsJson(item as Map<String, Any?>, "$indent    "))
-                                else -> append("\"$item\"")
-                            }
-                            if (i < value.size - 1) append(",")
-                            append("\n")
-                        }
-                        append("$indent  ]")
-                    }
-                    is String -> append("\"$value\"")
-                    null -> append("null")
-                    else -> append("\"$value\"")
-                }
-                if (index < map.size - 1) append(",")
-                append("\n")
-            }
-            append("$indent}")
-        }
-    }
-
     @Test
     fun parseZdl_CompleteZdl() {
-        val model = parseZdl("src/test/resources/complete.zdl")
+        val model = parseZdl("complete.zdl")
 
         assertEquals("ZenWave Online Food Delivery - Orders Module.", JSONPath.get(model, "$.javadoc"))
         assertEquals("com.example:artifact:RELEASE", JSONPath.get(model, "$.imports[0]"))
@@ -169,7 +135,7 @@ class ZdlListenerKotlinTest {
 
     @Test
     fun parseZdl_Legacy() {
-        val model = parseZdl("src/test/resources/legacy.jdl")
+        val model = parseZdl("legacy.jdl")
         assertEquals(1, (JSONPath.get(model, "$.services") as? Map<*, *>)?.size ?: 0)
         assertEquals(listOf("Customer", "Address"), JSONPath.get(model, "$.services.CustomerService.aggregates"))
         assertEquals(10, (JSONPath.get(model, "$.services.CustomerService.methods") as? Map<*, *>)?.size ?: 0)
@@ -177,39 +143,39 @@ class ZdlListenerKotlinTest {
 
     @Test
     fun parseZdl_Problems() {
-        val model = parseZdl("src/test/resources/problems.zdl")
+        val model = parseZdl("problems.zdl")
         val problems = JSONPath.get(model, "$.problems", emptyList<Any>()) as? List<*> ?: emptyList<Any>()
         assertEquals(14, problems.size)
     }
 
     @Test
     fun parseZdl_Problems_ExtraTypes() {
-        val model = ZdlParser().withExtraFieldTypes(listOf("OrderStatusX")).parseModel(readFileContent("src/test/resources/problems.zdl"))
+        val model = ZdlParser().withExtraFieldTypes(listOf("OrderStatusX")).parseModel(readFileContent("problems.zdl"))
         val problems = JSONPath.get(model, "$.problems", emptyList<Any>()) as? List<*> ?: emptyList<Any>()
         assertEquals(12, problems.size)
     }
 
     @Test
     fun parseZdl_Policies() {
-        val model = parseZdl("src/test/resources/policies.zdl")
+        val model = parseZdl("policies.zdl")
         // println(model)
     }
 
     @Test
     fun parseZdl_NestedFields() {
-        val model = parseZdl("src/test/resources/nested-fields.zdl")
+        val model = parseZdl("nested-fields.zdl")
         // println(model)
     }
 
     @Test
     fun parseZdl_NestedId_Inputs_Outputs() {
-        val model = parseZdl("src/test/resources/nested-input-output-model.zdl")
+        val model = parseZdl("nested-input-output-model.zdl")
         // println(model)
     }
 
     @Test
     fun parseZdl_UnrecognizedTokens() {
-        val model = parseZdl("src/test/resources/unrecognized-tokens.zdl")
+        val model = parseZdl("unrecognized-tokens.zdl")
         // println(model)
     }
 
@@ -219,7 +185,57 @@ class ZdlListenerKotlinTest {
     }
 
     private fun readFileContent(fileName: String): String {
-        return String(Files.readAllBytes(Paths.get(fileName)))
+        return readTestFile(fileName)
     }
+
+    fun printMapAsJson(map: Map<String, Any?>, indent: String = ""): String {
+        return buildString {
+            append("{\n")
+            map.entries.forEachIndexed { index, (key, value) ->
+                append("$indent  \"$key\": ")
+                when (value) {
+                    is IntArray -> append(value.contentToString())
+                    is Map<*, *> -> append(printMapAsJson(value as Map<String, Any?>, "$indent  "))
+                    is List<*> -> append(printListAsJson(value, "$indent  "))
+                    is String -> append("\"$value\"")
+                    null -> append("null")
+                    else -> append("\"$value\"")
+                }
+                if (index < map.size - 1) append(",")
+                append("\n")
+            }
+            append("$indent}")
+        }
+    }
+
+    fun printListAsJson(list: List<*>, indent: String = ""): String {
+        return buildString {
+            append("[\n")
+            list.forEachIndexed { i, item ->
+                append("$indent  ")
+                when (item) {
+                    is Map<*, *> -> append(printMapAsJson(item as Map<String, Any?>, "$indent  "))
+                    is List<*> -> append(printListAsJson(item, "$indent  "))
+                    is String -> append("\"$item\"")
+                    null -> append("null")
+                    else -> append("\"$item\"")
+                }
+                if (i < list.size - 1) append(",")
+                append("\n")
+            }
+            append("$indent]")
+        }
+    }
+
+    fun printAsJson(obj: Any?, indent: String = ""): String {
+        return when (obj) {
+            is Map<*, *> -> printMapAsJson(obj as Map<String, Any?>, indent)
+            is List<*> -> printListAsJson(obj, indent)
+            is String -> "\"$obj\""
+            null -> "null"
+            else -> "\"$obj\""
+        }
+    }
+
 }
 

@@ -10,9 +10,7 @@ class ZdlModelPostProcessor {
             val enums = model.getEnums()
             val events = model.getEvents()
 
-            @Suppress("UNCHECKED_CAST")
-            val fields: List<MutableMap<String, Any?>> = JSONPath.get(model, "$..fields[*]", listOf<MutableMap<String, Any?>>())
-                ?: emptyList()
+            val fields = JSONPath.get(model, "$..fields[*]", listOf<MutableMap<String, Any?>>())
             for (field in fields) {
                 val type = field["type"]
                 if (type != null) {
